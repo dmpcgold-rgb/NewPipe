@@ -328,6 +328,12 @@ public final class Player implements PlaybackListener, Listener {
         return new VideoPlaybackResolver.QualityResolver() {
             @Override
             public int getDefaultResolutionIndex(final List<VideoStream> sortedVideos) {
+                // Select a modest default stream in energy-saving mode; manual quality selection
+                // continues to use getOverrideResolutionIndex below and is never blocked.
+                if (EnergySaver.isEnabled(context)) {
+                    final String preferredResolution = videoPlayerSelected() ? "480p" : "360p";
+                    return getResolutionIndex(context, sortedVideos, preferredResolution);
+                }
                 return videoPlayerSelected()
                         ? ListHelper.getDefaultResolutionIndex(context, sortedVideos)
                         : ListHelper.getPopupDefaultResolutionIndex(context, sortedVideos);
