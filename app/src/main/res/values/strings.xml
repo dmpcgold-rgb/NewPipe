@@ -74,6 +74,15 @@
     <string name="play_audio">Audio</string>
     <string name="default_audio_format_title">Default audio format</string>
     <string name="default_video_format_title">Default video format</string>
+    <string name="sleep_timer_title">Sleep timer</string>
+    <string name="sleep_timer_summary">Stops playback automatically after the selected time. Starts with playback and turns off after use.</string>
+    <string-array name="sleep_timer_labels">
+        <item>Off</item>
+        <item>15 minutes</item>
+        <item>30 minutes</item>
+        <item>60 minutes</item>
+        <item>120 minutes</item>
+    </string-array>
     <string name="energy_saver_title">Battery saver</string>
     <string name="energy_saver_summary">Uses smaller thumbnails and fewer animations. New video playback starts at 480p (360p in popup mode); higher quality remains selectable manually. Background subscription checks wait for Wi-Fi and sufficient battery and run at most every 8 hours. Restart the app to fully apply image decoding changes.</string>
     <string name="theme_title">Theme</string>

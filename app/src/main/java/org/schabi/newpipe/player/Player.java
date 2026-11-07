@@ -273,6 +273,8 @@ public final class Player implements PlaybackListener, Listener {
     private final HistoryRecordManager recordManager;
 
     private boolean screenOn = true;
+    @NonNull
+    private final SleepTimerController sleepTimer;
 
     /*//////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -293,6 +295,8 @@ public final class Player implements PlaybackListener, Listener {
         context = service;
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
         recordManager = new HistoryRecordManager(context);
+        sleepTimer = new SleepTimerController(context, prefs,
+                service::destroyPlayerAndStopService);
 
         setupBroadcastReceiver();
 
@@ -710,6 +714,7 @@ public final class Player implements PlaybackListener, Listener {
         setRecovery();
         stopActivityBinding();
 
+        sleepTimer.dispose();
         destroyPlayer();
         unregisterBroadcastReceiver();
 
@@ -1218,6 +1223,7 @@ public final class Player implements PlaybackListener, Listener {
         }
 
         UIs.call(PlayerUi::onPlaying);
+        sleepTimer.onPlaybackStarted();
     }
 
     private void onBuffering() {
