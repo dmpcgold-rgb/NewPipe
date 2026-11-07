@@ -811,8 +811,22 @@ public final class ListHelper {
                 preferences.getBoolean(context.getString(R.string.prefer_descriptive_audio_key),
                         false);
 
-        return getAudioTrackComparator(preferredLanguage, preferOriginalAudio,
-                preferDescriptiveAudio);
+        final Comparator<AudioStream> defaultComparator =
+                getAudioTrackComparator(preferredLanguage, preferOriginalAudio,
+                        preferDescriptiveAudio);
+        if (!preferences.getBoolean(
+                context.getString(R.string.prefer_german_original_audio_key), true)) {
+            return defaultComparator;
+        }
+
+        // Highest-ranked track must win (the caller uses max()). Preserve language-specific
+        // manual overrides in getAudioFormatIndex(), which are selected by exact track ID.
+        return Comparator.comparing((AudioStream stream) ->
+                        stream.getAudioTrackType() == AudioTrackType.ORIGINAL
+                        && stream.getAudioLocale() != null
+                        && Locale.GERMAN.getLanguage().equals(
+                                stream.getAudioLocale().getLanguage()))
+                .thenComparing(defaultComparator);
     }
 
     /**

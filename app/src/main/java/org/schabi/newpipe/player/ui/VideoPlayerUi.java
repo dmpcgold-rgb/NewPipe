@@ -1189,8 +1189,18 @@ public abstract class VideoPlayerUi extends PlayerUi implements SeekBar.OnSeekBa
                 .flatMap(MediaItemTag::getMaybeAudioTrack)
                 .map(MediaItemTag.AudioTrack::getAudioStreams)
                 .orElse(null);
-        if (availableStreams == null || availableStreams.size() < 2) {
+        final boolean embeddedAudioAvailable = player.getSelectedVideoStream()
+                .map(stream -> !stream.isVideoOnly()).orElse(false);
+        if (availableStreams == null || (availableStreams.size() < 2
+                && !embeddedAudioAvailable)) {
             return;
+        }
+
+        // Include audio embedded in a combined video stream. Otherwise a separate auto-dub
+        // can be selected but the video's native sound cannot easily be restored.
+        if (embeddedAudioAvailable) {
+            audioTrackPopupMenu.getMenu().add(POPUP_MENU_ID_AUDIO_TRACK,
+                    availableStreams.size(), Menu.NONE, R.string.embedded_video_audio_title);
         }
 
         for (int i = 0; i < availableStreams.size(); i++) {
@@ -1199,9 +1209,13 @@ public abstract class VideoPlayerUi extends PlayerUi implements SeekBar.OnSeekBa
                     Localization.audioTrackName(context, audioStream));
         }
 
-        player.getSelectedAudioStream()
-                .ifPresent(s -> binding.audioTrackTextView.setText(
-                        Localization.audioTrackName(context, s)));
+        if (player.isUsingEmbeddedVideoAudio()) {
+            binding.audioTrackTextView.setText(R.string.embedded_video_audio_title);
+        } else {
+            player.getSelectedAudioStream()
+                    .ifPresent(s -> binding.audioTrackTextView.setText(
+                            Localization.audioTrackName(context, s)));
+        }
         binding.audioTrackTextView.setVisibility(View.VISIBLE);
         audioTrackPopupMenu.setOnMenuItemClickListener(this);
         audioTrackPopupMenu.setOnDismissListener(this);
@@ -1378,14 +1392,24 @@ public abstract class VideoPlayerUi extends PlayerUi implements SeekBar.OnSeekBa
         final MediaItemTag.AudioTrack audioTrack =
                 currentMetadata.getMaybeAudioTrack().get();
         final List<AudioStream> availableStreams = audioTrack.getAudioStreams();
-        final int selectedStreamIndex = audioTrack.getSelectedAudioStreamIndex();
-        if (selectedStreamIndex == menuItemIndex || availableStreams.size() <= menuItemIndex) {
+        if (menuItemIndex == availableStreams.size()) {
+            // Selecting the combined video's original audio clears the manually chosen dub.
+            if (!player.isUsingEmbeddedVideoAudio()) {
+                player.setAudioTrack(null);
+                binding.audioTrackTextView.setText(menuItem.getTitle());
+            }
+            return;
+        }
+        if (menuItemIndex < 0 || menuItemIndex >= availableStreams.size()) {
             return;
         }
 
+        final int selectedStreamIndex = audioTrack.getSelectedAudioStreamIndex();
+        if (selectedStreamIndex == menuItemIndex && !player.isUsingEmbeddedVideoAudio()) {
+            return;
+        }
         final String newAudioTrack = availableStreams.get(menuItemIndex).getAudioTrackId();
         player.setAudioTrack(newAudioTrack);
-
         binding.audioTrackTextView.setText(menuItem.getTitle());
     }
 

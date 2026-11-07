@@ -2390,6 +2390,13 @@ public final class Player implements PlaybackListener, Listener {
         reloadPlayQueueManager();
     }
 
+    /** Returns whether the selected video's embedded audio is currently used. */
+    public boolean isUsingEmbeddedVideoAudio() {
+        return videoResolver.getAudioTrack() == null
+                && getSelectedVideoStream()
+                        .map(stream -> !stream.isVideoOnly()).orElse(false);
+    }
+
     public void setAudioTrack(@Nullable final String audioTrackId) {
         saveStreamProgressState();
         setRecovery();

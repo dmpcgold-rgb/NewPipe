@@ -74,6 +74,9 @@
     <string name="play_audio">Audio</string>
     <string name="default_audio_format_title">Default audio format</string>
     <string name="default_video_format_title">Default video format</string>
+    <string name="prefer_german_original_audio_title">Prefer German original audio</string>
+    <string name="prefer_german_original_audio_summary">When the source has an original German audio track, prefer it over automatically dubbed audio. All tracks provided by the source stay selectable.</string>
+    <string name="embedded_video_audio_title">Video audio (without separate dubbing)</string>
     <string name="sleep_timer_title">Sleep timer</string>
     <string name="sleep_timer_summary">Stops playback automatically after the selected time. Starts with playback and turns off after use.</string>
     <string-array name="sleep_timer_labels">
