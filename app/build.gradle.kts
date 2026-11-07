@@ -91,8 +91,8 @@ configure<ApplicationExtension> {
 
             // suffix the app id and the app name with git branch name
             if (normalizedWorkingBranch.isEmpty() || workingBranch in defaultBranches) {
-                applicationIdSuffix = ".continuous"
-                resValue("string", "app_name", "NewPipe Continuous")
+                applicationIdSuffix = ".gold"
+                resValue("string", "app_name", "NewPipe Gold")
             } else {
                 applicationIdSuffix = ".continuous.$normalizedWorkingBranch"
                 resValue("string", "app_name", "NewPipe $workingBranch")
