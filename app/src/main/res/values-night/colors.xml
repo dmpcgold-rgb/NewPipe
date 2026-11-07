@@ -2,4 +2,9 @@
 <resources>
     <color name="contrastColor">@color/white</color>
     <color name="defaultIconTint">@color/white</color>
+
+    <!-- Clear monochrome download-progress indication on dark surfaces. -->
+    <color name="audio_already_load_color">#F5F5F5</color>
+    <color name="video_already_load_color">#F5F5F5</color>
+    <color name="subtitle_already_load_color">#F5F5F5</color>
 </resources>
