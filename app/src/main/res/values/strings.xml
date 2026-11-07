@@ -921,4 +921,13 @@
     <string name="api23_requirement_dialog_title">NewPipe is dropping support for Android 5</string>
     <string name="api23_requirement_dialog_message">Unfortunately NewPipe depends on a few libraries that dropped support for Android 5.0 and 5.1. The next NewPipe release will therefore only work on devices with Android 6 or higher, sadly. Read more in the blogpost.</string>
     <string name="api23_requirement_dialog_blogpost">Blogpost</string>
+    <string name="gold_multi_download">Download selected videos</string>
+    <string name="gold_multi_download_count">Download %1$d selected</string>
+    <string name="gold_clear_selection">Clear selection</string>
+    <string name="gold_multi_download_description">Choose a format for all selected videos. Items will be added to the regular download queue using your default quality. Existing files will not be overwritten.</string>
+    <string name="gold_batch_video">Download videos</string>
+    <string name="gold_batch_audio">Download audio only</string>
+    <string name="gold_batch_result">%1$d of %2$d downloads queued. Skipped: %3$d.</string>
+    <string name="gold_batch_storage_error">For batch downloads, set a permanent download folder and disable Ask where to download in Download settings.</string>
+    <string name="gold_batch_started">Adding selected videos to the download queue…</string>
 </resources>

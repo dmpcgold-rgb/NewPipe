@@ -10,16 +10,19 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.schabi.newpipe.R;
+import org.schabi.newpipe.download.BatchDownloadStarter;
 import org.schabi.newpipe.error.ErrorUtil;
 import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
@@ -29,6 +32,7 @@ import org.schabi.newpipe.info_list.InfoListAdapter;
 import org.schabi.newpipe.info_list.ItemViewMode;
 import org.schabi.newpipe.info_list.dialog.InfoItemDialog;
 import org.schabi.newpipe.util.NavigationHelper;
+import org.schabi.newpipe.util.PermissionHelper;
 import org.schabi.newpipe.util.OnClickGesture;
 import org.schabi.newpipe.util.StateSaver;
 import org.schabi.newpipe.util.ThemeHelper;
@@ -84,6 +88,9 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         }
         PreferenceManager.getDefaultSharedPreferences(activity)
                 .unregisterOnSharedPreferenceChangeListener(this);
+        if (infoListAdapter != null) {
+            infoListAdapter.setOnSelectionChangedListener(null);
+        }
     }
 
     @Override
@@ -253,15 +260,28 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
     @Override
     protected void initListeners() {
         super.initListeners();
+        infoListAdapter.setOnSelectionChangedListener(() -> {
+            if (isAdded()) {
+                requireActivity().invalidateOptionsMenu();
+            }
+        });
         infoListAdapter.setOnStreamSelectedListener(new OnClickGesture<>() {
             @Override
             public void selected(final StreamInfoItem selectedItem) {
-                onStreamSelected(selectedItem);
+                if (infoListAdapter.isSelectionMode()) {
+                    infoListAdapter.toggleStreamSelection(selectedItem);
+                } else {
+                    onStreamSelected(selectedItem);
+                }
             }
 
             @Override
             public void held(final StreamInfoItem selectedItem) {
-                showInfoItemDialog(selectedItem);
+                if (infoListAdapter.canSelectStream(selectedItem)) {
+                    infoListAdapter.toggleStreamSelection(selectedItem);
+                } else {
+                    showInfoItemDialog(selectedItem);
+                }
             }
         });
 
@@ -406,11 +426,75 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                     + "menu = [" + menu + "], inflater = [" + inflater + "]");
         }
         super.onCreateOptionsMenu(menu, inflater);
+        if (infoListAdapter != null && infoListAdapter.isSelectionMode()) {
+            inflater.inflate(R.menu.gold_multi_select, menu);
+            final MenuItem action = menu.findItem(R.id.action_gold_download_selected);
+            if (action != null) {
+                action.setTitle(getString(R.string.gold_multi_download_count,
+                        infoListAdapter.getSelectedStreamCount()));
+            }
+        }
         final ActionBar supportActionBar = activity.getSupportActionBar();
         if (supportActionBar != null) {
             supportActionBar.setDisplayShowTitleEnabled(true);
             supportActionBar.setDisplayHomeAsUpEnabled(!useAsFrontPage);
         }
+    }
+
+    /**
+     * Handles selection toolbar actions before child fragments process their own menu actions.
+     *
+     * @param item selected toolbar action
+     * @return true if this is a multi-selection action
+     */
+    protected boolean handleGoldSelectionAction(@NonNull final MenuItem item) {
+        if (item.getItemId() == R.id.action_gold_clear_selection) {
+            infoListAdapter.clearStreamSelection();
+            return true;
+        }
+        if (item.getItemId() == R.id.action_gold_download_selected) {
+            showGoldBatchDownloadDialog();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
+        return handleGoldSelectionAction(item) || super.onOptionsItemSelected(item);
+    }
+
+    protected boolean clearGoldSelectionIfActive() {
+        if (infoListAdapter != null && infoListAdapter.isSelectionMode()) {
+            infoListAdapter.clearStreamSelection();
+            return true;
+        }
+        return false;
+    }
+
+    private void showGoldBatchDownloadDialog() {
+        final List<StreamInfoItem> selected = infoListAdapter.getSelectedStreams();
+        if (selected.isEmpty()) {
+            return;
+        }
+        final int[] selectedType = {0};
+        new AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.gold_multi_download_count, selected.size()))
+                .setMessage(R.string.gold_multi_download_description)
+                .setSingleChoiceItems(new String[]{
+                        getString(R.string.gold_batch_video),
+                        getString(R.string.gold_batch_audio)
+                }, 0, (dialog, which) -> selectedType[0] = which)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.download, (dialog, which) -> {
+                    if (!PermissionHelper.checkStoragePermissions(requireActivity(),
+                            PermissionHelper.DOWNLOAD_DIALOG_REQUEST_CODE)) {
+                        return;
+                    }
+                    BatchDownloadStarter.start(requireContext(), selected, selectedType[0] == 1);
+                    infoListAdapter.clearStreamSelection();
+                })
+                .show();
     }
 
     /*//////////////////////////////////////////////////////////////////////////
