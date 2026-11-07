@@ -5,6 +5,14 @@
     android:title="@string/settings_category_history_title">
 
     <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="@string/private_session_key"
+        android:title="@string/private_session_title"
+        android:summary="@string/private_session_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="@string/enable_watch_history_key"
         android:summary="@string/enable_watch_history_summary"

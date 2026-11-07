@@ -50,12 +50,16 @@ class HistoryRecordManager(context: Context) {
     private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
     private val searchHistoryKey = context.getString(R.string.enable_search_history_key)
     private val streamHistoryKey = context.getString(R.string.enable_watch_history_key)
+    private val privateModeKey = context.getString(R.string.private_session_key)
+
+    private val isPrivateModeEnabled: Boolean
+        get() = sharedPreferences.getBoolean(privateModeKey, false)
 
     private val isSearchHistoryEnabled: Boolean
-        get() = sharedPreferences.getBoolean(searchHistoryKey, false)
+        get() = !isPrivateModeEnabled && sharedPreferences.getBoolean(searchHistoryKey, false)
 
     private val isStreamHistoryEnabled: Boolean
-        get() = sharedPreferences.getBoolean(streamHistoryKey, false)
+        get() = !isPrivateModeEnabled && sharedPreferences.getBoolean(streamHistoryKey, false)
 
     // ///////////////////////////////////////////////////////
     // Watch History
@@ -269,6 +273,9 @@ class HistoryRecordManager(context: Context) {
     }
 
     fun saveStreamState(info: StreamInfo, progressMillis: Long): Completable {
+        if (isPrivateModeEnabled) {
+            return Completable.complete()
+        }
         return rxCompletable(Dispatchers.IO) {
             database.withWriteTransaction {
                 val streamId = streamTable.upsert(StreamEntity(info))

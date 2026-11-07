@@ -828,6 +828,8 @@
     <string name="channel_tab_podcasts">Podcasts</string>
     <string name="channel_tab_courses">Kurse</string>
     <string name="kao_dialog_warning">Google hat damit begonnen, eine neue Anforderung zur Entwicklerverifizierung für Android durchzusetzen, die die Installation von NewPipe in Brasilien, Indonesien, Singapur und Thailand erschwert; eine weltweite Einführung ist für 2027 geplant.\n\nSofern die Anforderungen nicht geändert werden, könnte es in naher Zukunft schwieriger oder gar unmöglich werden, NewPipe auf zertifizierten Android-Geräten zu installieren.</string>
+    <string name="private_session_title">Privater Modus</string>
+    <string name="private_session_summary">Suchverlauf, Videoverlauf und Wiedergabepositionen werden vorübergehend nicht gespeichert. Vorhandene Einträge bleiben erhalten.</string>
     <string name="prefer_german_original_audio_title">Deutschen Originalton bevorzugen</string>
     <string name="prefer_german_original_audio_summary">Wenn die deutsche Originaltonspur verfügbar ist, wird sie einer automatischen Synchronisation vorgezogen. Alle verfügbaren Tonspuren bleiben auswählbar.</string>
     <string name="embedded_video_audio_title">Tonspur des Videos (ohne separate Synchronisation)</string>
