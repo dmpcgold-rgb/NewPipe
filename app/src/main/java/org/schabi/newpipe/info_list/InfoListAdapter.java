@@ -2,6 +2,7 @@ package org.schabi.newpipe.info_list;
 
 import android.content.Context;
 import android.util.Log;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.schabi.newpipe.R;
 import org.schabi.newpipe.databinding.PignateFooterBinding;
 import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.channel.ChannelInfoItem;
@@ -31,11 +33,13 @@ import org.schabi.newpipe.info_list.holder.StreamCardInfoItemHolder;
 import org.schabi.newpipe.info_list.holder.StreamGridInfoItemHolder;
 import org.schabi.newpipe.info_list.holder.StreamInfoItemHolder;
 import org.schabi.newpipe.info_list.holder.StreamMiniInfoItemHolder;
+import org.schabi.newpipe.info_list.holder.StreamMiniInfoItemHolder;
 import org.schabi.newpipe.local.history.HistoryRecordManager;
 import org.schabi.newpipe.util.FallbackViewHolder;
 import org.schabi.newpipe.util.OnClickGesture;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -84,6 +88,9 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private final InfoItemBuilder infoItemBuilder;
     private final List<InfoItem> infoItemList;
     private final HistoryRecordManager recordManager;
+    private final LinkedHashMap<String, StreamInfoItem> selectedStreams = new LinkedHashMap<>();
+    @Nullable
+    private Runnable onSelectionChanged;
 
     private boolean useMiniVariant = false;
     private boolean showFooter = false;
@@ -97,6 +104,61 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         recordManager = new HistoryRecordManager(context);
         infoItemBuilder = new InfoItemBuilder(context);
         infoItemList = new ArrayList<>();
+    }
+
+    public void setOnSelectionChangedListener(@Nullable final Runnable listener) {
+        onSelectionChanged = listener;
+    }
+
+    public boolean isSelectionMode() {
+        return !selectedStreams.isEmpty();
+    }
+
+    public int getSelectedStreamCount() {
+        return selectedStreams.size();
+    }
+
+    public List<StreamInfoItem> getSelectedStreams() {
+        return new ArrayList<>(selectedStreams.values());
+    }
+
+    private String streamKey(@NonNull final StreamInfoItem item) {
+        return item.getServiceId() + ":" + item.getUrl();
+    }
+
+    public boolean canSelectStream(@NonNull final StreamInfoItem item) {
+        return switch (item.getStreamType()) {
+            case VIDEO_STREAM, AUDIO_STREAM, POST_LIVE_STREAM, POST_LIVE_AUDIO_STREAM -> true;
+            default -> false;
+        };
+    }
+
+    public void toggleStreamSelection(@NonNull final StreamInfoItem item) {
+        if (!canSelectStream(item)) {
+            return;
+        }
+        final String key = streamKey(item);
+        if (selectedStreams.containsKey(key)) {
+            selectedStreams.remove(key);
+        } else {
+            selectedStreams.put(key, item);
+        }
+        notifyDataSetChanged();
+        notifySelectionChanged();
+    }
+
+    public void clearStreamSelection() {
+        if (!selectedStreams.isEmpty()) {
+            selectedStreams.clear();
+            notifyDataSetChanged();
+            notifySelectionChanged();
+        }
+    }
+
+    private void notifySelectionChanged() {
+        if (onSelectionChanged != null) {
+            onSelectionChanged.run();
+        }
     }
 
     public void setOnStreamSelectedListener(final OnClickGesture<StreamInfoItem> listener) {
@@ -159,7 +221,9 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             return;
         }
         infoItemList.clear();
+        selectedStreams.clear();
         notifyDataSetChanged();
+        notifySelectionChanged();
     }
 
     public void setHeaderSupplier(@Nullable final Supplier<View> headerSupplier) {
@@ -334,9 +398,22 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     + "position = [" + position + "]");
         }
         if (holder instanceof InfoItemHolder) {
-            ((InfoItemHolder) holder).updateFromItem(
-                    // If header is present, offset the items by -1
-                    infoItemList.get(hasHeader() ? position - 1 : position), recordManager);
+            final InfoItem infoItem = infoItemList.get(hasHeader() ? position - 1 : position);
+            ((InfoItemHolder) holder).updateFromItem(infoItem, recordManager);
+            if (infoItem instanceof StreamInfoItem stream
+                    && holder instanceof StreamMiniInfoItemHolder streamHolder) {
+                final boolean selected = selectedStreams.containsKey(streamKey(stream));
+                final Drawable overlay = selected
+                        ? holder.itemView.getContext().getDrawable(R.drawable.bg_gold_selected_stream)
+                        : null;
+                holder.itemView.setForeground(overlay);
+                holder.itemView.setActivated(selected);
+                streamHolder.itemVideoTitleView.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        0, 0, selected ? R.drawable.ic_done : 0, 0);
+                streamHolder.itemVideoTitleView.setCompoundDrawablePadding(
+                        selected ? (int) (8 * holder.itemView.getResources()
+                                .getDisplayMetrics().density) : 0);
+            }
         }
     }
 
