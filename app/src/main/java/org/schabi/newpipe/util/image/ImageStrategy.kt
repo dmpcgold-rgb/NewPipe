@@ -17,6 +17,14 @@ object ImageStrategy {
 
     private var preferredImageQuality = PreferredImageQuality.MEDIUM
 
+    @Volatile
+    private var energySaverEnabled = false
+
+    @JvmStatic
+    fun setEnergySaverEnabled(enabled: Boolean) {
+        energySaverEnabled = enabled
+    }
+
     @JvmStatic
     fun setPreferredImageQuality(preferredImageQuality: PreferredImageQuality) {
         ImageStrategy.preferredImageQuality = preferredImageQuality
@@ -144,7 +152,12 @@ object ImageStrategy {
             return null // do not load images
         }
 
-        return choosePreferredImage(images, preferredImageQuality)
+        // Keep a disabled-image preference respected, while selecting low-bandwidth thumbnails
+        // whenever energy saving is enabled. Do not change persisted user quality preferences.
+        return choosePreferredImage(
+            images,
+            if (energySaverEnabled) PreferredImageQuality.LOW else preferredImageQuality
+        )
     }
 
     /**

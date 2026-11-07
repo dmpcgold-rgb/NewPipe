@@ -251,6 +251,7 @@
     <string name="create_error_notification_key">create_error_notification_key</string>
 
     <!-- THEMES -->
+    <string name="energy_saver_key">gold_energy_saver</string>
     <string name="theme_key">theme</string>
     <string name="night_theme_key">night_theme</string>
     <string name="light_theme_key">light_theme</string>

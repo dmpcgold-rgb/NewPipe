@@ -34,6 +34,7 @@ import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExt
 import org.schabi.newpipe.ktx.hasAssignableCause
 import org.schabi.newpipe.settings.NewPipeSettings
 import org.schabi.newpipe.util.BridgeStateSaverInitializer
+import org.schabi.newpipe.util.EnergySaver
 import org.schabi.newpipe.util.Localization
 import org.schabi.newpipe.util.ServiceHelper
 import org.schabi.newpipe.util.StateSaver
@@ -121,6 +122,9 @@ open class App :
             )
         )
 
+        // Avoid downloading unnecessarily large artwork while energy saving is active.
+        ImageStrategy.setEnergySaverEnabled(EnergySaver.isEnabled(this))
+
         configureRxJavaErrorHandler()
 
         YoutubeStreamExtractor.setPoTokenProvider(PoTokenProviderImpl)
@@ -129,8 +133,8 @@ open class App :
     override fun newImageLoader(context: Context): ImageLoader = ImageLoader
         .Builder(this)
         .logger(if (BuildConfig.DEBUG) DebugLogger() else null)
-        .allowRgb565(getSystemService<ActivityManager>()!!.isLowRamDevice)
-        .crossfade(true)
+        .allowRgb565(EnergySaver.isEnabled(context) || getSystemService<ActivityManager>()!!.isLowRamDevice)
+        .crossfade(!EnergySaver.isEnabled(context))
         .components {
             add(OkHttpNetworkFetcherFactory(callFactory = DownloaderImpl.getInstance().client))
         }.build()

@@ -828,4 +828,6 @@
     <string name="channel_tab_podcasts">Podcasts</string>
     <string name="channel_tab_courses">Kurse</string>
     <string name="kao_dialog_warning">Google hat damit begonnen, eine neue Anforderung zur Entwicklerverifizierung für Android durchzusetzen, die die Installation von NewPipe in Brasilien, Indonesien, Singapur und Thailand erschwert; eine weltweite Einführung ist für 2027 geplant.\n\nSofern die Anforderungen nicht geändert werden, könnte es in naher Zukunft schwieriger oder gar unmöglich werden, NewPipe auf zertifizierten Android-Geräten zu installieren.</string>
+    <string name="energy_saver_title">Energiesparmodus</string>
+    <string name="energy_saver_summary">Kleinere Vorschaubilder und weniger Animationen. Abo-Abfragen laufen nur bei WLAN und ausreichendem Akkustand, höchstens alle 8 Stunden. Für alle Bildoptimierungen die App neu starten.</string>
 </resources>

@@ -24,6 +24,7 @@ import org.schabi.newpipe.error.ErrorUtil
 import org.schabi.newpipe.error.UserAction
 import org.schabi.newpipe.local.feed.service.FeedLoadManager
 import org.schabi.newpipe.local.feed.service.FeedLoadService
+import org.schabi.newpipe.util.EnergySaver
 
 /*
  * Worker which checks for new streams of subscribed channels
@@ -119,18 +120,26 @@ class NotificationWorker(
          * by replacing the previously used worker.
          */
         fun schedule(context: Context, options: ScheduleOptions, force: Boolean = false) {
+            val energySaving = EnergySaver.isEnabled(context)
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(
-                    if (options.isRequireNonMeteredNetwork) {
+                    if (energySaving || options.isRequireNonMeteredNetwork) {
                         NetworkType.UNMETERED
                     } else {
                         NetworkType.CONNECTED
                     }
-                ).build()
+                )
+                .setRequiresBatteryNotLow(energySaving)
+                .build()
 
+            val interval = if (energySaving) {
+                maxOf(options.interval, TimeUnit.HOURS.toMillis(8))
+            } else {
+                options.interval
+            }
             val request = PeriodicWorkRequest.Builder(
                 NotificationWorker::class.java,
-                options.interval,
+                interval,
                 TimeUnit.MILLISECONDS
             ).setConstraints(constraints)
                 .addTag(WORK_TAG)
@@ -150,6 +159,16 @@ class NotificationWorker(
 
         @JvmStatic
         fun schedule(context: Context) = schedule(context, ScheduleOptions.from(context))
+
+        /** Recreate recurring work when the energy saver preference changes. */
+        @JvmStatic
+        fun refreshEnergySaverSchedule(context: Context) {
+            if (areNotificationsEnabled(context)) {
+                schedule(context, ScheduleOptions.from(context), force = true)
+            } else {
+                cancel(context)
+            }
+        }
 
         /**
          * Check for new streams immediately

@@ -74,6 +74,8 @@
     <string name="play_audio">Audio</string>
     <string name="default_audio_format_title">Default audio format</string>
     <string name="default_video_format_title">Default video format</string>
+    <string name="energy_saver_title">Battery saver</string>
+    <string name="energy_saver_summary">Uses smaller thumbnails and fewer animations. Background subscription checks wait for Wi-Fi and sufficient battery and run at most every 8 hours. Restart the app to fully apply image decoding changes.</string>
     <string name="theme_title">Theme</string>
     <string name="night_theme_title">Night theme</string>
     <string name="light_theme_title">Light</string>

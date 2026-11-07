@@ -10,6 +10,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.preference.Preference;
 
 import org.schabi.newpipe.R;
+import org.schabi.newpipe.local.feed.notifications.NotificationWorker;
+import org.schabi.newpipe.util.image.ImageStrategy;
 import org.schabi.newpipe.util.Constants;
 import org.schabi.newpipe.util.ThemeHelper;
 
@@ -18,6 +20,20 @@ public class AppearanceSettingsFragment extends BasePreferenceFragment {
     @Override
     public void onCreatePreferences(final Bundle savedInstanceState, final String rootKey) {
         addPreferencesFromResourceRegistry();
+
+        final String energySaverKey = getString(R.string.energy_saver_key);
+        final Preference saverPreference = findPreference(energySaverKey);
+        if (saverPreference != null) {
+            saverPreference.setOnPreferenceChangeListener((preference, newValue) -> {
+                final boolean enabled = (Boolean) newValue;
+                // Store before rescheduling so WorkManager sees the new constraints immediately.
+                defaultPreferences.edit().putBoolean(energySaverKey, enabled).apply();
+                ImageStrategy.setEnergySaverEnabled(enabled);
+                NotificationWorker.refreshEnergySaverSchedule(requireContext());
+                return true;
+            });
+        }
+
 
         final String themeKey = getString(R.string.theme_key);
         // the key of the active theme when settings were opened (or recreated after theme change)

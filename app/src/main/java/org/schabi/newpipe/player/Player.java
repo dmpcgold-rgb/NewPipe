@@ -102,6 +102,7 @@ import org.schabi.newpipe.player.helper.CustomRenderersFactory;
 import org.schabi.newpipe.player.helper.LoadController;
 import org.schabi.newpipe.player.helper.PlayerDataSource;
 import org.schabi.newpipe.player.helper.PlayerHelper;
+import org.schabi.newpipe.util.EnergySaver;
 import org.schabi.newpipe.player.mediaitem.MediaItemTag;
 import org.schabi.newpipe.player.mediasession.MediaSessionPlayerUi;
 import org.schabi.newpipe.player.notification.NotificationPlayerUi;
@@ -1035,7 +1036,11 @@ public final class Player implements PlaybackListener, Listener {
     }
 
     private Disposable getProgressUpdateDisposable() {
-        return Observable.interval(PROGRESS_LOOP_INTERVAL_MILLIS, MILLISECONDS,
+        // Audio playback needs fewer visual time updates than an active video player.
+        final long updateInterval = EnergySaver.isEnabled(context)
+                && (playerType == PlayerType.AUDIO || isAudioOnly)
+                ? 3000L : PROGRESS_LOOP_INTERVAL_MILLIS;
+        return Observable.interval(updateInterval, MILLISECONDS,
                         AndroidSchedulers.mainThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(ignored -> triggerProgressUpdate(),
