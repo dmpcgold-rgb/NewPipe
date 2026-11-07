@@ -838,5 +838,5 @@
         <item>120 Minuten</item>
     </string-array>
     <string name="energy_saver_title">Energiesparmodus</string>
-    <string name="energy_saver_summary">Kleinere Vorschaubilder und weniger Animationen. Neue Videos starten mit 480p (Pop-up: 360p); höhere Qualität bleibt manuell wählbar. Abo-Abfragen laufen nur bei WLAN und ausreichendem Akkustand, höchstens alle 8 Stunden. Für alle Bildoptimierungen die App neu starten.</string>
+    <string name="energy_saver_summary">Kleinere Vorschaubilder und weniger Animationen. Online-Suchvorschläge werden abgeschaltet, lokale bleiben verfügbar. Neue Videos starten mit 480p (Pop-up: 360p); höhere Qualität bleibt manuell wählbar. Abo-Abfragen laufen nur bei WLAN und ausreichendem Akkustand, höchstens alle 8 Stunden. Für alle Bildoptimierungen die App neu starten.</string>
 </resources>
