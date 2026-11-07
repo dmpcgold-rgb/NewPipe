@@ -14,9 +14,10 @@ import org.schabi.newpipe.R
  */
 object EnergySaver {
     @JvmStatic
-    fun isEnabled(context: Context): Boolean =
-        PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
+    fun isEnabled(context: Context): Boolean {
+        return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
             context.getString(R.string.energy_saver_key),
             true
         )
+    }
 }
