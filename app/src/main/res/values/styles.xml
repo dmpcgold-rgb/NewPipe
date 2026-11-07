@@ -51,6 +51,8 @@
         <item name="colorPrimary">@color/dark_youtube_primary_color</item>
         <item name="colorPrimaryDark">@color/dark_youtube_primary_color</item>
         <item name="colorAccent">@color/dark_youtube_accent_color</item>
+        <!-- Keep switches, seek bars and checked controls visible on dark surfaces. -->
+        <item name="colorControlActivated">@color/white</item>
         <item name="android:windowBackground">@color/dark_background_color</item>
         <item name="windowBackground">@color/dark_background_color</item>
 
