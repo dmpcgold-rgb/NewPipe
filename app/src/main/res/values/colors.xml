@@ -66,7 +66,7 @@
     <color name="selected_background_color">#96717171</color>
 
     <!-- GigaGet theme -->
-    <color name="bluegray">#607D8B</color>
+    <color name="bluegray">#202020</color>
 
     <!-- GigaGet download Theme colors -->
     <color name="audio_left_to_load_color">#555555</color>
