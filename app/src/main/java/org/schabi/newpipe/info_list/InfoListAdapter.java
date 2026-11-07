@@ -33,7 +33,6 @@ import org.schabi.newpipe.info_list.holder.StreamCardInfoItemHolder;
 import org.schabi.newpipe.info_list.holder.StreamGridInfoItemHolder;
 import org.schabi.newpipe.info_list.holder.StreamInfoItemHolder;
 import org.schabi.newpipe.info_list.holder.StreamMiniInfoItemHolder;
-import org.schabi.newpipe.info_list.holder.StreamMiniInfoItemHolder;
 import org.schabi.newpipe.local.history.HistoryRecordManager;
 import org.schabi.newpipe.util.FallbackViewHolder;
 import org.schabi.newpipe.util.OnClickGesture;
@@ -404,7 +403,8 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     && holder instanceof StreamMiniInfoItemHolder streamHolder) {
                 final boolean selected = selectedStreams.containsKey(streamKey(stream));
                 final Drawable overlay = selected
-                        ? holder.itemView.getContext().getDrawable(R.drawable.bg_gold_selected_stream)
+                        ? holder.itemView.getContext().getDrawable(
+                                R.drawable.bg_gold_selected_stream)
                         : null;
                 holder.itemView.setForeground(overlay);
                 holder.itemView.setActivated(selected);
