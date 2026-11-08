@@ -171,6 +171,20 @@
             android:title="@string/gold_audio_speed_title"
             app:iconSpaceReserved="false"
             app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="@string/gold_podcast_mode_key"
+            android:title="@string/gold_podcast_mode_title"
+            android:summary="@string/gold_podcast_mode_summary"
+            app:iconSpaceReserved="false" />
+        <ListPreference
+            android:defaultValue="1.0"
+            android:entries="@array/gold_speed_labels"
+            android:entryValues="@array/gold_speed_values"
+            android:key="@string/gold_podcast_speed_key"
+            android:title="@string/gold_podcast_speed_title"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
 
         <ListPreference
             android:defaultValue="0"

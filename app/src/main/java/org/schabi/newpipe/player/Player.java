@@ -1026,7 +1026,10 @@ public final class Player implements PlaybackListener, Listener {
         if (isPrepared && prefs.getBoolean(context.getString(R.string.gold_speed_by_type_key),
                 false)) {
             getCurrentStreamInfo().ifPresent(info -> {
-                final int key = StreamTypeUtil.isAudio(info.getStreamType())
+                final int key = prefs.getBoolean(
+                        context.getString(R.string.gold_podcast_mode_key), false)
+                        ? R.string.gold_podcast_speed_key
+                        : StreamTypeUtil.isAudio(info.getStreamType())
                         ? R.string.gold_audio_speed_key : R.string.gold_video_speed_key;
                 prefs.edit().putString(context.getString(key),
                         Float.toString(roundedSpeed)).apply();
@@ -1499,7 +1502,10 @@ public final class Player implements PlaybackListener, Listener {
                     if (prefs.getBoolean(context.getString(R.string.gold_speed_by_type_key),
                             false) && !exoPlayerIsNull()) {
                         final boolean audio = StreamTypeUtil.isAudio(info.getStreamType());
-                        final int speedKey = audio ? R.string.gold_audio_speed_key
+                        final int speedKey = prefs.getBoolean(
+                                context.getString(R.string.gold_podcast_mode_key), false)
+                                ? R.string.gold_podcast_speed_key
+                                : audio ? R.string.gold_audio_speed_key
                                 : R.string.gold_video_speed_key;
                         final float speed = GoldPlaybackEnhancements.safeSpeed(prefs.getString(
                                 context.getString(speedKey), "1.0"));

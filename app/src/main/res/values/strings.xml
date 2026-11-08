@@ -1010,4 +1010,7 @@
     <string name="gold_audio_dynamics_summary">Optional Android audio compression reduces sharp volume changes. Availability varies by device; this is not full per-track loudness normalization and may change the sound.</string>
     <string name="gold_popup_swipe_close_title">Swipe down to close floating player</string>
     <string name="gold_popup_swipe_close_summary">When enabled, a fast downward flick closes the floating player. Disabled by default to prevent accidental closing.</string>
+    <string name="gold_podcast_mode_title">Podcast listening mode</string>
+    <string name="gold_podcast_mode_summary">Manually enable when listening to podcasts, including video podcasts. The separate podcast speed is used until you switch this off.</string>
+    <string name="gold_podcast_speed_title">Podcast speed</string>
 </resources>

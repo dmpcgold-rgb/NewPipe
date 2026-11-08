@@ -929,4 +929,7 @@
     <string name="gold_audio_dynamics_summary">Optionale Audio-Kompression von Android reduziert starke Lautstärkesprünge. Die Wirkung hängt vom Gerät ab, ist keine vollständige Titel-Normalisierung und kann den Klang verändern.</string>
     <string name="gold_popup_swipe_close_title">Popup-Player nach unten wegwischen</string>
     <string name="gold_popup_swipe_close_summary">Ein schnelles Wischen nach unten schließt den schwebenden Player. Standardmäßig ausgeschaltet, damit du ihn nicht versehentlich schließt.</string>
+    <string name="gold_podcast_mode_title">Podcast-Hörmodus</string>
+    <string name="gold_podcast_mode_summary">Für Podcasts manuell aktivieren, auch für Video-Podcasts. Solange aktiv, wird die eigene Podcast-Geschwindigkeit verwendet.</string>
+    <string name="gold_podcast_speed_title">Podcast-Geschwindigkeit</string>
 </resources>
