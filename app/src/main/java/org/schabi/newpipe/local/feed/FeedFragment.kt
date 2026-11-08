@@ -386,7 +386,7 @@ class FeedFragment : BaseStateFragment<FeedState>() {
                 else -> StreamItem.ItemVersion.NORMAL
             }
             progressState.items.forEach { it.itemVersion = itemVersion }
-            groupAdapter.updateAsync(progressState.items, false)
+            groupAdapter.updateAsync(progressState.items, false) { }
         }
 
         if (progressState.items.isNotEmpty() || groupAdapter.itemCount > 0) {
