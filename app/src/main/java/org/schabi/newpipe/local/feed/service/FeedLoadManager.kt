@@ -327,6 +327,9 @@ class FeedLoadManager(private val context: Context) {
                     }
                 }
             }
+            // Publish once the transaction has committed, not only when a channel finishes.
+            // Newly discovered uploads can now appear before the other channels finish loading.
+            broadcastProgress()
         }
 
         private fun filterNewStreams(list: List<StreamInfoItem>): List<StreamInfoItem> {
@@ -370,6 +373,6 @@ class FeedLoadManager(private val context: Context) {
         /**
          * Number of items to buffer to mass-insert in the database.
          */
-        private const val BUFFER_COUNT_BEFORE_INSERT = 20
+        private const val BUFFER_COUNT_BEFORE_INSERT = 5
     }
 }
