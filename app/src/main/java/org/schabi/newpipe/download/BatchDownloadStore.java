@@ -86,7 +86,8 @@ public final class BatchDownloadStore {
                             videoId = parsed.getPathSegments().get(1);
                         }
                         if (videoId != null && !videoId.isBlank()) {
-                            return serviceId + ":video:" + videoId + ":" + audioOnly + formatIdentity;
+                            return serviceId + ":video:" + videoId + ":"
+                                    + audioOnly + formatIdentity;
                         }
                     }
                 } catch (final IllegalArgumentException ignored) {
