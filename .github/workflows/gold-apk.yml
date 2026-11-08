@@ -36,8 +36,8 @@ jobs:
           java-version: '21'
           cache: gradle
 
-      - name: Build signed continuous APK
-        run: ./gradlew :app:assembleContinuous --stacktrace
+      - name: Check code style and build continuous APK
+        run: ./gradlew :app:runCheckstyle :app:assembleContinuous --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v7
