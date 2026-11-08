@@ -574,6 +574,7 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
             adapter.clear();
             int queued = 0;
             int failed = 0;
+            int skipped = 0;
             int pending = 0;
             for (final BatchDownloadStore.Entry item : current) {
                 final int statusText;
@@ -588,6 +589,7 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                         break;
                     case BatchDownloadStore.SKIPPED:
                         statusText = R.string.gold_batch_status_skipped;
+                        skipped++;
                         break;
                     case BatchDownloadStore.CANCELLED:
                         statusText = R.string.gold_batch_status_cancelled;
@@ -600,7 +602,7 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                         + (item.error.isBlank() ? "" : " (" + item.error + ")"));
             }
             dialog.setTitle(getString(R.string.gold_batch_status_progress,
-                    queued, current.size(), failed, pending));
+                    queued, current.size(), failed, skipped, pending));
             adapter.notifyDataSetChanged();
         };
         BatchDownloadStore.addListener(update);

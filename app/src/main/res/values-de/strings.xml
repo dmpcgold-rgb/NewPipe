@@ -873,7 +873,7 @@
     <string name="gold_batch_status_failed">Fehlgeschlagen</string>
     <string name="gold_batch_status_skipped">Übersprungen</string>
     <string name="gold_batch_status_cancelled">Abgebrochen</string>
-    <string name="gold_batch_status_progress">%1$d von %2$d eingereiht · %3$d Fehler · %4$d warten</string>
+    <string name="gold_batch_status_progress">%1$d von %2$d eingereiht · %3$d Fehler · %4$d übersprungen · %5$d warten</string>
     <string name="gold_batch_item_options">Markiertes Video verwalten</string>
     <string name="gold_batch_remove_pending">Wartendes Video entfernen</string>
     <string name="gold_batch_retry_item">Video erneut versuchen</string>

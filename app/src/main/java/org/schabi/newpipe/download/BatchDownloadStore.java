@@ -38,7 +38,6 @@ public final class BatchDownloadStore {
 
     private static final String PREFERENCES = "newpipe_gold_batch_downloads";
     private static final String DATA_KEY = "batch_items_v1";
-    private static final int MAX_HISTORY = 250;
     private static final Object LOCK = new Object();
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final CopyOnWriteArrayList<Runnable> LISTENERS =
@@ -137,8 +136,8 @@ public final class BatchDownloadStore {
 
     private static void save(@NonNull final Context context, @NonNull final List<Entry> entries) {
         final JSONArray array = new JSONArray();
-        final int start = Math.max(0, entries.size() - MAX_HISTORY);
-        for (int i = start; i < entries.size(); i++) {
+        // Never evict pending jobs: a large selection must survive process restarts.
+        for (int i = 0; i < entries.size(); i++) {
             try {
                 array.put(entries.get(i).toJson());
             } catch (final JSONException ignored) {
@@ -194,6 +193,9 @@ public final class BatchDownloadStore {
                     }
                 }
                 if (!duplicate) {
+                    // A cancelled record is not an active duplicate.
+                    existing.removeIf(old -> old.key().equals(entry.key())
+                            && CANCELLED.equals(old.status));
                     existing.add(entry);
                     added++;
                 }

@@ -10,6 +10,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.Network;
+import android.net.NetworkRequest;
+import android.os.Build;
 import android.net.NetworkCapabilities;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -168,7 +170,13 @@ public final class BatchDownloadStarter implements ServiceConnection {
             }
         };
         try {
-            manager.registerDefaultNetworkCallback(wifiWatcher);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                manager.registerDefaultNetworkCallback(wifiWatcher);
+            } else {
+                manager.registerNetworkCallback(new NetworkRequest.Builder()
+                        .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                        .build(), wifiWatcher);
+            }
         } catch (final RuntimeException ignored) {
             wifiWatcher = null;
         }
@@ -259,6 +267,10 @@ public final class BatchDownloadStarter implements ServiceConnection {
                         queuedInSession++;
                         BatchDownloadStore.update(appContext, item,
                                 BatchDownloadStore.QUEUED, null);
+                    } else if ("Wi-Fi not connected".equals(error)) {
+                        // Keep this item pending instead of marking a network change as failure.
+                        BatchDownloadStore.update(appContext, item,
+                                BatchDownloadStore.PENDING, null);
                     } else {
                         BatchDownloadStore.update(appContext, item,
                                 BatchDownloadStore.FAILED, error);
@@ -406,16 +418,17 @@ public final class BatchDownloadStarter implements ServiceConnection {
         }
         if (video.isVideoOnly()) {
             audio = selectAudioStream(audioStreams, item.audioTrack);
-            if (audio != null
-                    && (audio.getFormat() != MediaFormat.WEBMA
-                    && audio.getFormat() != MediaFormat.WEBMA_OPUS
-                    || video.getFormat() != MediaFormat.WEBM)) {
+            if (audio != null && !compatibleAudio(video, audio)) {
+                // Never mix incompatible audio/video containers.
                 final AudioStream compatible = SecondaryStreamHelper.getAudioStreamFor(
                         appContext, audioStreams, video);
                 if (compatible != null
-                        && compatible.getAudioTrackId() != null
-                        && compatible.getAudioTrackId().equals(audio.getAudioTrackId())) {
+                        && (BatchDownloadStore.AUDIO_AUTO.equals(item.audioTrack)
+                        || compatible.getAudioTrackId() != null
+                        && compatible.getAudioTrackId().equals(audio.getAudioTrackId()))) {
                     audio = compatible;
+                } else {
+                    audio = null;
                 }
             }
             if (audio == null) {
@@ -449,6 +462,16 @@ public final class BatchDownloadStarter implements ServiceConnection {
         }
         return new DownloadSpec(urls, 'v', video.getFormat().getSuffix(),
                 video.getFormat().mimeType, processing, recovery);
+    }
+
+    private boolean compatibleAudio(@NonNull final VideoStream video,
+                                    @NonNull final AudioStream audio) {
+        if (video.getFormat() == MediaFormat.WEBM) {
+            return audio.getFormat() == MediaFormat.WEBMA
+                    || audio.getFormat() == MediaFormat.WEBMA_OPUS;
+        }
+        return video.getFormat() == MediaFormat.MPEG_4
+                && audio.getFormat() == MediaFormat.M4A;
     }
 
     @Nullable
@@ -513,7 +536,9 @@ public final class BatchDownloadStarter implements ServiceConnection {
             }
         }
         if (BatchDownloadStore.nextPending(appContext) != null) {
-            if (!hasDownloadableNow(appContext)) {
+            if (hasDownloadableNow(appContext)) {
+                resumePending(appContext);
+            } else {
                 watchWifi(appContext);
             }
         } else {

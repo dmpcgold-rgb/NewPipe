@@ -950,7 +950,7 @@
     <string name="gold_batch_status_failed">Failed</string>
     <string name="gold_batch_status_skipped">Skipped</string>
     <string name="gold_batch_status_cancelled">Cancelled</string>
-    <string name="gold_batch_status_progress">%1$d of %2$d queued · %3$d failed · %4$d pending</string>
+    <string name="gold_batch_status_progress">%1$d of %2$d queued · %3$d failed · %4$d skipped · %5$d pending</string>
     <string name="gold_batch_item_options">Manage selected item</string>
     <string name="gold_batch_remove_pending">Remove pending item</string>
     <string name="gold_batch_retry_item">Retry this video</string>
