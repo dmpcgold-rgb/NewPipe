@@ -55,6 +55,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
+import android.os.SystemClock;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -240,6 +241,12 @@ public final class Player implements PlaybackListener, Listener {
      */
     private boolean isAudioOnly = false;
     private boolean isPrepared = false;
+    @Nullable
+    private String goldSkipStreamUrl;
+    private boolean goldIntroSkipped;
+    private boolean goldOutroSkipped;
+    private int goldNetworkRetries;
+    private long goldNetworkRetryWindow;
 
     /*//////////////////////////////////////////////////////////////////////////
     // UIs, listeners and disposables
@@ -1008,6 +1015,15 @@ public final class Player implements PlaybackListener, Listener {
         final float roundedPitch = Math.round(pitch * 100.0f) / 100.0f;
 
         savePlaybackParametersToPrefs(this, roundedSpeed, roundedPitch, skipSilence);
+        if (isPrepared && prefs.getBoolean(context.getString(R.string.gold_speed_by_type_key),
+                false)) {
+            getCurrentStreamInfo().ifPresent(info -> {
+                final int key = StreamTypeUtil.isAudio(info.getStreamType())
+                        ? R.string.gold_audio_speed_key : R.string.gold_video_speed_key;
+                prefs.edit().putString(context.getString(key),
+                        Float.toString(roundedSpeed)).apply();
+            });
+        }
         simpleExoPlayer.setPlaybackParameters(
                 new PlaybackParameters(roundedSpeed, roundedPitch));
         simpleExoPlayer.setSkipSilenceEnabled(skipSilence);
@@ -1027,6 +1043,38 @@ public final class Player implements PlaybackListener, Listener {
         if (isPrepared) {
             UIs.call(ui -> ui.onUpdateProgress(currentProgress, duration, bufferPercent));
             notifyProgressUpdateToListeners(currentProgress, duration, bufferPercent);
+            maybeGoldSkipIntroOutro(currentProgress, duration);
+        }
+    }
+
+    private void maybeGoldSkipIntroOutro(final int progress, final int duration) {
+        if (currentState != STATE_PLAYING || duration <= 0 || !prefs.getBoolean(
+                context.getString(R.string.gold_auto_skip_key), false) || isLive()) {
+            return;
+        }
+        final String url = getCurrentStreamInfo()
+                .map(StreamInfo::getUrl).orElse(null);
+        if (url == null) {
+            return;
+        }
+        if (!url.equals(goldSkipStreamUrl)) {
+            goldSkipStreamUrl = url;
+            goldIntroSkipped = false;
+            goldOutroSkipped = false;
+        }
+        final int introMillis = GoldPlaybackEnhancements.secondsToMillis(
+                prefs.getString(context.getString(R.string.gold_intro_seconds_key), "10"));
+        final int outroMillis = GoldPlaybackEnhancements.secondsToMillis(
+                prefs.getString(context.getString(R.string.gold_outro_seconds_key), "15"));
+        if (!goldIntroSkipped && GoldPlaybackEnhancements.shouldSkipIntro(
+                progress, duration, introMillis, outroMillis)) {
+            goldIntroSkipped = true;
+            seekTo(introMillis);
+        } else if (!goldOutroSkipped && GoldPlaybackEnhancements.shouldSkipOutro(
+                progress, duration, introMillis, outroMillis)) {
+            goldOutroSkipped = true;
+            // Preserve NewPipe's own queue and repeat transition behavior.
+            seekTo(Math.max(0, duration - 200L));
         }
     }
 
@@ -1053,7 +1101,8 @@ public final class Player implements PlaybackListener, Listener {
 
     private Disposable getProgressUpdateDisposable() {
         // Audio playback needs fewer visual time updates than an active video player.
-        final long updateInterval = EnergySaver.isEnabled(context)
+        final long updateInterval = (EnergySaver.isEnabled(context)
+                || GoldPowerPolicy.isBatteryLow(context))
                 && (playerType == PlayerType.AUDIO || isAudioOnly)
                 ? 3000L : PROGRESS_LOOP_INTERVAL_MILLIS;
         return Observable.interval(updateInterval, MILLISECONDS,
@@ -1233,6 +1282,7 @@ public final class Player implements PlaybackListener, Listener {
 
         UIs.call(PlayerUi::onPlaying);
         sleepTimer.onPlaybackStarted();
+        goldNetworkRetries = 0;
     }
 
     private void onBuffering() {
@@ -1252,6 +1302,8 @@ public final class Player implements PlaybackListener, Listener {
             stopProgressLoop();
         }
 
+        // Save before leaving playback, rather than relying only on app shutdown.
+        saveStreamProgressState();
         UIs.call(PlayerUi::onPaused);
     }
 
@@ -1271,6 +1323,9 @@ public final class Player implements PlaybackListener, Listener {
         }
 
         UIs.call(PlayerUi::onCompleted);
+        goldSkipStreamUrl = null;
+        goldIntroSkipped = false;
+        goldOutroSkipped = false;
 
         if (playQueue.getIndex() < playQueue.size() - 1) {
             playQueue.offsetIndex(+1);
@@ -1433,6 +1488,16 @@ public final class Player implements PlaybackListener, Listener {
                 if (previousInfo == null || !previousInfo.getUrl().equals(info.getUrl())) {
                     // only update with the new stream info if it has actually changed
                     updateMetadataWith(info);
+                    if (prefs.getBoolean(context.getString(R.string.gold_speed_by_type_key),
+                            false) && !exoPlayerIsNull()) {
+                        final boolean audio = StreamTypeUtil.isAudio(info.getStreamType());
+                        final int speedKey = audio ? R.string.gold_audio_speed_key
+                                : R.string.gold_video_speed_key;
+                        final float speed = GoldPlaybackEnhancements.safeSpeed(prefs.getString(
+                                context.getString(speedKey), "1.0"));
+                        simpleExoPlayer.setPlaybackParameters(new PlaybackParameters(
+                                speed, getPlaybackPitch()));
+                    }
                 } else if (previousAudioTrack == null
                         || tag.getMaybeAudioTrack()
                         .map(t -> t.getSelectedAudioStreamIndex()
@@ -1609,9 +1674,18 @@ public final class Player implements PlaybackListener, Listener {
             case ERROR_CODE_IO_NETWORK_CONNECTION_FAILED:
             case ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT:
             case ERROR_CODE_UNSPECIFIED:
-                // Reload playback on unexpected errors:
-                setRecovery();
-                reloadPlayQueueManager();
+                // Limit rapid retries so an unavailable source does not continuously reload.
+                final long now = SystemClock.elapsedRealtime();
+                if (now - goldNetworkRetryWindow > 60_000L) {
+                    goldNetworkRetryWindow = now;
+                    goldNetworkRetries = 0;
+                }
+                if (++goldNetworkRetries <= 3) {
+                    setRecovery();
+                    reloadPlayQueueManager();
+                } else {
+                    onPlaybackShutdown();
+                }
                 break;
             default:
                 // API, remote and renderer errors belong here:

@@ -494,9 +494,13 @@ public final class PopupPlayerUi extends VideoPlayerUi {
         final boolean popupRememberSizeAndPos = prefs.getBoolean(
                 context.getString(R.string.popup_remember_size_pos_key), true);
         final float defaultSize = context.getResources().getDimension(R.dimen.popup_default_width);
-        final float popupWidth = popupRememberSizeAndPos
+        final float storedWidth = popupRememberSizeAndPos
                 ? prefs.getFloat(context.getString(R.string.popup_saved_width_key), defaultSize)
                 : defaultSize;
+        // Keep a restored popup reachable after a screen size or display-density change.
+        final int margin = DeviceUtils.dpToPx(16, context);
+        final float maxWidth = Math.max(96, screenWidth - margin);
+        final float popupWidth = Math.max(96, Math.min(storedWidth, maxWidth));
         final float popupHeight = getMinimumVideoHeight(popupWidth);
 
         final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
