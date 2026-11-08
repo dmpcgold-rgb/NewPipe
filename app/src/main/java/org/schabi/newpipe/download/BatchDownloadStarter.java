@@ -405,21 +405,9 @@ public final class BatchDownloadStarter implements ServiceConnection {
                 getStreamsOfSpecifiedDelivery(info.getAudioStreams(), PROGRESSIVE_HTTP));
         AudioStream audio = null;
         if (BatchDownloadStore.AUDIO_EMBEDDED.equals(item.audioTrack)) {
-            // The user explicitly wants the original soundtrack contained in the video.
-            for (final VideoStream candidate : streams) {
-                if (!candidate.isVideoOnly()) {
-                    video = candidate;
-                    break;
-                }
-            }
+            video = pickVideoOfType(streams, false, resolution, video);
         } else if (!BatchDownloadStore.AUDIO_AUTO.equals(item.audioTrack)) {
-            // Manually requested language requires separate video and audio streams.
-            for (final VideoStream candidate : streams) {
-                if (candidate.isVideoOnly()) {
-                    video = candidate;
-                    break;
-                }
-            }
+            video = pickVideoOfType(streams, true, resolution, video);
         }
         if (video.isVideoOnly()) {
             audio = selectAudioStream(audioStreams, item.audioTrack);
@@ -447,6 +435,10 @@ public final class BatchDownloadStarter implements ServiceConnection {
                 if (video.isVideoOnly()) {
                     return null;
                 }
+                if (BatchDownloadStore.AUDIO_DUBBED.equals(item.audioTrack)) {
+                    // Never silently replace an explicitly selected dub with original audio.
+                    return null;
+                }
             }
         }
         if (video.getContent() == null || video.getFormat() == null) {
@@ -467,6 +459,25 @@ public final class BatchDownloadStarter implements ServiceConnection {
         }
         return new DownloadSpec(urls, 'v', video.getFormat().getSuffix(),
                 video.getFormat().mimeType, processing, recovery);
+    }
+
+    private VideoStream pickVideoOfType(@NonNull final List<VideoStream> streams,
+                                        final boolean videoOnly,
+                                        @NonNull final String resolution,
+                                        @NonNull final VideoStream fallback) {
+        final List<VideoStream> candidates = new ArrayList<>();
+        for (final VideoStream stream : streams) {
+            if (stream.isVideoOnly() == videoOnly) {
+                candidates.add(stream);
+            }
+        }
+        if (candidates.isEmpty()) {
+            return fallback;
+        }
+        final int idx = resolution.isBlank()
+                ? ListHelper.getDefaultResolutionIndex(appContext, candidates)
+                : ListHelper.getResolutionIndex(appContext, candidates, resolution);
+        return idx >= 0 && idx < candidates.size() ? candidates.get(idx) : fallback;
     }
 
     private boolean compatibleAudio(@NonNull final VideoStream video,
@@ -498,6 +509,10 @@ public final class BatchDownloadStarter implements ServiceConnection {
                     && stream.getAudioTrackType() == AudioTrackType.DUBBED) {
                 matches.add(stream);
             }
+        }
+        if (matches.isEmpty() && (BatchDownloadStore.AUDIO_ORIGINAL.equals(preference)
+                || BatchDownloadStore.AUDIO_DUBBED.equals(preference))) {
+            return null;
         }
         final List<AudioStream> candidates = matches.isEmpty() ? streams : matches;
         final int index = ListHelper.getDefaultAudioFormat(appContext, candidates);
