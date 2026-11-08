@@ -173,6 +173,10 @@
             android:name=".download.VoeBrowserActivity"
             android:exported="false"
             android:label="VOE • Download" />
+        <activity
+            android:name=".download.EpisodeHostActivity"
+            android:exported="false"
+            android:label="Hoster auswählen" />
 
         <activity
             android:name=".RouterActivity"
