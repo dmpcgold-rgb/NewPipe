@@ -92,7 +92,7 @@ public final class LinkQueueLinks {
      * @return whether this is a VOE HTTPS address
      */
     public static boolean isVoeUrl(final String value) {
-        if (!isSafeHttps(value)) {
+        if (value == null || !isSafeHttps(value)) {
             return false;
         }
         try {
