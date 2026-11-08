@@ -44,6 +44,26 @@ public class LinkQueueLinksTest {
     }
 
     @Test
+    public void recognisesEpisodePageWithUppercaseEpisodeSegment() {
+        assertTrue(LinkQueueLinks.isEpisodePage(
+                "https://serienstream.to/serie/flashforward/staffel-1/Episode-2"));
+        assertTrue(LinkQueueLinks.isEpisodePage(
+                "https://s.to/serie/flashforward/staffel-1/episode-2"));
+        assertFalse(LinkQueueLinks.isEpisodePage(
+                "https://serienstream.to/serie/flashforward"));
+        assertFalse(LinkQueueLinks.isEpisodePage(
+                "https://other.example/serie/flashforward/staffel-1/episode-2"));
+    }
+
+    @Test
+    public void refusesHostLookalikesForEpisodeChooser() {
+        assertFalse(LinkQueueLinks.isEpisodeSiteUrl("https://serienstream.to.evil.test/"));
+        assertFalse(LinkQueueLinks.isEpisodeSiteUrl("http://serienstream.to/"));
+        assertFalse(LinkQueueLinks.isEpisodeSiteUrl("https://192.168.1.1/"));
+        assertTrue(LinkQueueLinks.isEpisodeSiteUrl("https://www.serienstream.to/serie/"));
+    }
+
+    @Test
     public void allowsOnlyOfficialVoeHosts() {
         assertTrue(LinkQueueLinks.isVoeUrl("https://voe.sx/e/123456789abc"));
         assertTrue(LinkQueueLinks.isVoeUrl("https://www.voe.sx/123456789abc"));
