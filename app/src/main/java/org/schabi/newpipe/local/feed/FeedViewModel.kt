@@ -26,7 +26,6 @@ import org.schabi.newpipe.local.feed.service.FeedEventManager.Event.ErrorResultE
 import org.schabi.newpipe.local.feed.service.FeedEventManager.Event.IdleEvent
 import org.schabi.newpipe.local.feed.service.FeedEventManager.Event.ProgressEvent
 import org.schabi.newpipe.local.feed.service.FeedEventManager.Event.SuccessResultEvent
-import org.schabi.newpipe.util.DEFAULT_THROTTLE_TIMEOUT
 
 class FeedViewModel(
     private val application: Application,
@@ -75,11 +74,11 @@ class FeedViewModel(
                 return@Function6 CombineResultEventHolder(t1, t2, t3, t4, t5, t6.firstOrNull())
             }
         )
-        .throttleLatest(DEFAULT_THROTTLE_TIMEOUT, TimeUnit.MILLISECONDS)
+        .throttleLatest(1200L, TimeUnit.MILLISECONDS, true)
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
         .map { (event, showPlayedItems, showPartiallyPlayedItems, showFutureItems, notLoadedCount, oldestUpdate) ->
-            val streamItems = if (event is SuccessResultEvent || event is IdleEvent) {
+            val streamItems = if (event is SuccessResultEvent || event is IdleEvent || event is ProgressEvent) {
                 feedDatabaseManager
                     .getStreams(groupId, showPlayedItems, showPartiallyPlayedItems, showFutureItems)
                     .blockingGet(arrayListOf())
@@ -94,7 +93,12 @@ class FeedViewModel(
             mutableStateLiveData.postValue(
                 when (event) {
                     is IdleEvent -> FeedState.LoadedState(listFromDB.map { e -> StreamItem(e) }, oldestUpdate, notLoadedCount, listOf())
-                    is ProgressEvent -> FeedState.ProgressState(event.currentProgress, event.maxProgress, event.progressMessage)
+                    is ProgressEvent -> FeedState.ProgressState(
+                        event.currentProgress,
+                        event.maxProgress,
+                        event.progressMessage,
+                        listFromDB.map { e -> StreamItem(e) }
+                    )
                     is SuccessResultEvent -> FeedState.LoadedState(listFromDB.map { e -> StreamItem(e) }, oldestUpdate, notLoadedCount, event.itemsErrors)
                     is ErrorResultEvent -> FeedState.ErrorState(event.error)
                 }
