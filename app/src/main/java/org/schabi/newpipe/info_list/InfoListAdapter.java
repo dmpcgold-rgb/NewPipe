@@ -132,6 +132,31 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         };
     }
 
+    public void selectAllVisibleStreams() {
+        for (final InfoItem item : infoItemList) {
+            if (item instanceof StreamInfoItem stream && canSelectStream(stream)) {
+                selectedStreams.put(streamKey(stream), stream);
+            }
+        }
+        notifyDataSetChanged();
+        notifySelectionChanged();
+    }
+
+    public void invertVisibleStreamSelection() {
+        for (final InfoItem item : infoItemList) {
+            if (item instanceof StreamInfoItem stream && canSelectStream(stream)) {
+                final String key = streamKey(stream);
+                if (selectedStreams.containsKey(key)) {
+                    selectedStreams.remove(key);
+                } else {
+                    selectedStreams.put(key, stream);
+                }
+            }
+        }
+        notifyDataSetChanged();
+        notifySelectionChanged();
+    }
+
     public void toggleStreamSelection(@NonNull final StreamInfoItem item) {
         if (!canSelectStream(item)) {
             return;

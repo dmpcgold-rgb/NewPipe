@@ -21,6 +21,8 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.snackbar.Snackbar;
+
 import org.schabi.newpipe.R;
 import org.schabi.newpipe.download.BatchDownloadStarter;
 import org.schabi.newpipe.error.ErrorUtil;
@@ -58,6 +60,8 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
     protected InfoListAdapter infoListAdapter;
     protected RecyclerView itemsList;
     private int focusedPosition = -1;
+    @Nullable
+    private Snackbar selectionBar;
 
     /*//////////////////////////////////////////////////////////////////////////
     // LifeCycle
@@ -90,6 +94,10 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                 .unregisterOnSharedPreferenceChangeListener(this);
         if (infoListAdapter != null) {
             infoListAdapter.setOnSelectionChangedListener(null);
+        }
+        if (selectionBar != null) {
+            selectionBar.dismiss();
+            selectionBar = null;
         }
     }
 
@@ -249,6 +257,7 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         }
 
         itemsList.setAdapter(infoListAdapter);
+        updateGoldSelectionBar();
     }
 
     protected void onItemSelected(final InfoItem selectedItem) {
@@ -263,6 +272,7 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         infoListAdapter.setOnSelectionChangedListener(() -> {
             if (isAdded()) {
                 requireActivity().invalidateOptionsMenu();
+                updateGoldSelectionBar();
             }
         });
         infoListAdapter.setOnStreamSelectedListener(new OnClickGesture<>() {
@@ -426,18 +436,46 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                     + "menu = [" + menu + "], inflater = [" + inflater + "]");
         }
         super.onCreateOptionsMenu(menu, inflater);
-        if (infoListAdapter != null && infoListAdapter.isSelectionMode()) {
-            inflater.inflate(R.menu.gold_multi_select, menu);
-            final MenuItem action = menu.findItem(R.id.action_gold_download_selected);
+        inflater.inflate(R.menu.gold_multi_select, menu);
+        final boolean selectionActive = infoListAdapter != null
+                && infoListAdapter.isSelectionMode();
+        for (final int id : new int[]{R.id.action_gold_download_selected,
+                R.id.action_gold_select_all, R.id.action_gold_invert_selection,
+                R.id.action_gold_clear_selection}) {
+            final MenuItem action = menu.findItem(id);
             if (action != null) {
-                action.setTitle(getString(R.string.gold_multi_download_count,
-                        infoListAdapter.getSelectedStreamCount()));
+                action.setVisible(selectionActive);
             }
+        }
+        final MenuItem download = menu.findItem(R.id.action_gold_download_selected);
+        if (download != null && selectionActive) {
+            download.setTitle(getString(R.string.gold_multi_download_count,
+                    infoListAdapter.getSelectedStreamCount()));
         }
         final ActionBar supportActionBar = activity.getSupportActionBar();
         if (supportActionBar != null) {
             supportActionBar.setDisplayShowTitleEnabled(true);
             supportActionBar.setDisplayHomeAsUpEnabled(!useAsFrontPage);
+        }
+    }
+
+    private void updateGoldSelectionBar() {
+        if (itemsList == null) {
+            return;
+        }
+        if (selectionBar != null) {
+            selectionBar.dismiss();
+            selectionBar = null;
+        }
+        if (infoListAdapter != null && infoListAdapter.isSelectionMode()) {
+            selectionBar = Snackbar.make(itemsList,
+                    getString(R.string.gold_multi_selected_count,
+                            infoListAdapter.getSelectedStreamCount()),
+                    Snackbar.LENGTH_INDEFINITE);
+            selectionBar.setAction(R.string.gold_multi_download, view -> {
+                showGoldBatchDownloadDialog();
+            });
+            selectionBar.show();
         }
     }
 
@@ -448,6 +486,18 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
      * @return true if this is a multi-selection action
      */
     protected boolean handleGoldSelectionAction(@NonNull final MenuItem item) {
+        if (item.getItemId() == R.id.action_gold_select_all) {
+            infoListAdapter.selectAllVisibleStreams();
+            return true;
+        }
+        if (item.getItemId() == R.id.action_gold_invert_selection) {
+            infoListAdapter.invertVisibleStreamSelection();
+            return true;
+        }
+        if (item.getItemId() == R.id.action_gold_manage_batch) {
+            showGoldBatchStatus();
+            return true;
+        }
         if (item.getItemId() == R.id.action_gold_clear_selection) {
             infoListAdapter.clearStreamSelection();
             return true;
@@ -470,6 +520,14 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
             return true;
         }
         return false;
+    }
+
+    private void showGoldBatchStatus() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.gold_batch_manage)
+                .setMessage(R.string.gold_batch_storage_notice)
+                .setPositiveButton(R.string.ok, null)
+                .show();
     }
 
     private void showGoldBatchDownloadDialog() {

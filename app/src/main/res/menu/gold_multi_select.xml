@@ -5,6 +5,15 @@
         android:icon="@drawable/ic_file_download"
         android:title="@string/gold_multi_download"
         app:showAsAction="always" />
+    <item android:id="@+id/action_gold_select_all"
+        android:title="@string/gold_select_all"
+        app:showAsAction="never" />
+    <item android:id="@+id/action_gold_invert_selection"
+        android:title="@string/gold_invert_selection"
+        app:showAsAction="never" />
+    <item android:id="@+id/action_gold_manage_batch"
+        android:title="@string/gold_batch_manage"
+        app:showAsAction="never" />
     <item android:id="@+id/action_gold_clear_selection"
         android:title="@string/gold_clear_selection"
         app:showAsAction="never" />
