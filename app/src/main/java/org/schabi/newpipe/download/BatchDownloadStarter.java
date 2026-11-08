@@ -409,6 +409,11 @@ public final class BatchDownloadStarter implements ServiceConnection {
         } else if (!BatchDownloadStore.AUDIO_AUTO.equals(item.audioTrack)) {
             video = pickVideoOfType(streams, true, resolution, video);
         }
+        if (BatchDownloadStore.AUDIO_DUBBED.equals(item.audioTrack)
+                && !video.isVideoOnly()) {
+            // Dubbed audio cannot be selected from a combined video-only original soundtrack.
+            return null;
+        }
         if (video.isVideoOnly()) {
             audio = selectAudioStream(audioStreams, item.audioTrack);
             if (audio != null && !compatibleAudio(video, audio)) {
