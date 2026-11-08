@@ -19,7 +19,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.schabi.newpipe.util.ThemeHelper;
@@ -60,10 +59,10 @@ public class EpisodeHostActivity extends AppCompatActivity {
         final LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         final TextView help = new TextView(this);
-        help.setText("Wähle auf der Episodenseite den Hoster VOE und "
-                + "tippe auf „Stream öffnen“. Wird ein VOE-Link erkannt, "
-                + "öffnet sich die VOE-Ansicht. Downloads nur, wenn "
-                + "der Anbieter sie erlaubt.");
+        help.setText("Wähle auf der Episodenseite VOE und tippe auf Play. "
+                + "Werbe-Weiterleitungen werden blockiert. "
+                + "Ein Download startet automatisch nur, wenn der Hoster "
+                + "eine direkt herunterladbare Datei anbietet.");
         final int padding = (int) (12 * getResources().getDisplayMetrics().density);
         help.setPadding(padding, padding, padding, padding);
         root.addView(help);
@@ -88,7 +87,7 @@ public class EpisodeHostActivity extends AppCompatActivity {
                 if (!request.isForMainFrame()) {
                     return false;
                 }
-                return handleNavigation(request.getUrl().toString(), request.hasGesture());
+                return handleNavigation(request.getUrl().toString());
             }
 
             @Override
@@ -116,8 +115,7 @@ public class EpisodeHostActivity extends AppCompatActivity {
                         if (!request.isForMainFrame()) {
                             return false;
                         }
-                        return handleNavigation(request.getUrl().toString(),
-                                request.hasGesture());
+                        return handleNavigation(request.getUrl().toString());
                     }
 
                     @Override
@@ -154,8 +152,7 @@ public class EpisodeHostActivity extends AppCompatActivity {
         settings.setJavaScriptCanOpenWindowsAutomatically(false);
     }
 
-    private boolean handleNavigation(@Nullable final String url,
-                                     final boolean userGesture) {
+    private boolean handleNavigation(@Nullable final String url) {
         if (LinkQueueLinks.isVoeUrl(url)) {
             handOffToVoe(url);
             return true;
@@ -163,17 +160,8 @@ public class EpisodeHostActivity extends AppCompatActivity {
         if (LinkQueueLinks.isEpisodeSiteUrl(url)) {
             return false;
         }
-        // Only a deliberate tap may open a different host, and only after confirmation.
-        if (userGesture && LinkQueueLinks.isSafeHttps(url)) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Externe Webseite")
-                    .setMessage("Dieser Link führt nicht direkt zu VOE. "
-                            + "Möchtest du ihn im normalen Browser öffnen?\n" + url)
-                    .setPositiveButton("Öffnen", (dialog, which) ->
-                            ShareUtils.openUrlInBrowser(this, url))
-                    .setNegativeButton("Abbrechen", null)
-                    .show();
-        }
+        // Ignore unrelated popup/advertising redirects. Do not open them in
+        // an external browser when the video play button is tapped.
         return true;
     }
 
