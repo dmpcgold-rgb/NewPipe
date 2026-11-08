@@ -4,10 +4,16 @@ import static org.schabi.newpipe.ktx.ViewUtils.animate;
 import static org.schabi.newpipe.ktx.ViewUtils.animateHideRecyclerViewAllowingScrolling;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -25,6 +31,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import org.schabi.newpipe.R;
 import org.schabi.newpipe.download.BatchDownloadStarter;
+import org.schabi.newpipe.download.BatchDownloadStore;
 import org.schabi.newpipe.error.ErrorUtil;
 import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
@@ -40,6 +47,7 @@ import org.schabi.newpipe.util.StateSaver;
 import org.schabi.newpipe.util.ThemeHelper;
 import org.schabi.newpipe.views.SuperScrollLayoutManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.function.Supplier;
@@ -475,6 +483,9 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
             selectionBar.setAction(R.string.gold_multi_download, view -> {
                 showGoldBatchDownloadDialog();
             });
+            selectionBar.setBackgroundTint(Color.BLACK);
+            selectionBar.setTextColor(Color.WHITE);
+            selectionBar.setActionTextColor(Color.WHITE);
             selectionBar.show();
         }
     }
@@ -523,11 +534,114 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
     }
 
     private void showGoldBatchStatus() {
-        new AlertDialog.Builder(requireContext())
+        final Context context = requireContext();
+        final List<BatchDownloadStore.Entry> entries = BatchDownloadStore.snapshot(context);
+        if (entries.isEmpty()) {
+            new AlertDialog.Builder(context)
+                    .setTitle(R.string.gold_batch_manage)
+                    .setMessage(R.string.gold_batch_empty)
+                    .setPositiveButton(R.string.ok, null)
+                    .show();
+            return;
+        }
+
+        final ArrayAdapter<String> adapter = new ArrayAdapter<>(context,
+                android.R.layout.simple_list_item_1, new ArrayList<>());
+        final AlertDialog dialog = new AlertDialog.Builder(context)
                 .setTitle(R.string.gold_batch_manage)
-                .setMessage(R.string.gold_batch_storage_notice)
-                .setPositiveButton(R.string.ok, null)
+                .setAdapter(adapter, (d, which) -> {
+                    final List<BatchDownloadStore.Entry> current =
+                            BatchDownloadStore.snapshot(context);
+                    if (which >= 0 && which < current.size()) {
+                        showGoldEntryOptions(current.get(which));
+                    }
+                })
+                .setPositiveButton(R.string.gold_batch_retry, (d, which) -> {
+                    BatchDownloadStore.retryFailures(context);
+                    BatchDownloadStarter.resumePending(context);
+                })
+                .setNeutralButton(R.string.gold_batch_cancel_pending, (d, which) -> {
+                    BatchDownloadStore.cancelPending(context);
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .create();
+
+        final Runnable update = () -> {
+            if (!isAdded()) {
+                return;
+            }
+            final List<BatchDownloadStore.Entry> current = BatchDownloadStore.snapshot(context);
+            adapter.clear();
+            int queued = 0;
+            int failed = 0;
+            int pending = 0;
+            for (final BatchDownloadStore.Entry item : current) {
+                final int statusText;
+                switch (item.status) {
+                    case BatchDownloadStore.QUEUED:
+                        statusText = R.string.gold_batch_status_queued;
+                        queued++;
+                        break;
+                    case BatchDownloadStore.FAILED:
+                        statusText = R.string.gold_batch_status_failed;
+                        failed++;
+                        break;
+                    case BatchDownloadStore.SKIPPED:
+                        statusText = R.string.gold_batch_status_skipped;
+                        break;
+                    case BatchDownloadStore.CANCELLED:
+                        statusText = R.string.gold_batch_status_cancelled;
+                        break;
+                    default:
+                        statusText = R.string.gold_batch_status_pending;
+                        pending++;
+                }
+                adapter.add(getString(statusText) + " · " + item.title
+                        + (item.error.isBlank() ? "" : " (" + item.error + ")"));
+            }
+            dialog.setTitle(getString(R.string.gold_batch_status_progress,
+                    queued, current.size(), failed, pending));
+            adapter.notifyDataSetChanged();
+        };
+        BatchDownloadStore.addListener(update);
+        dialog.setOnDismissListener(d -> BatchDownloadStore.removeListener(update));
+        dialog.show();
+        update.run();
+    }
+
+    private void showGoldEntryOptions(@NonNull final BatchDownloadStore.Entry entry) {
+        if (BatchDownloadStore.QUEUED.equals(entry.status)) {
+            return; // Already handed to NewPipe's normal download manager.
+        }
+        new AlertDialog.Builder(requireContext())
+                .setTitle(entry.title)
+                .setItems(new String[]{getString(R.string.gold_batch_retry_item),
+                        getString(R.string.gold_batch_remove_pending)}, (dialog, which) -> {
+                    if (which == 0) {
+                        BatchDownloadStore.retry(requireContext(), entry);
+                        BatchDownloadStarter.resumePending(requireContext());
+                    } else {
+                        BatchDownloadStore.removePending(requireContext(), entry);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    private Spinner goldSpinner(@NonNull final LinearLayout form, final int title,
+                                @NonNull final String[] options) {
+        final Context context = requireContext();
+        final TextView label = new TextView(context);
+        label.setText(title);
+        label.setPadding(0, 12, 0, 2);
+        form.addView(label);
+        final Spinner spinner = new Spinner(context);
+        final ArrayAdapter<String> adapter = new ArrayAdapter<>(context,
+                android.R.layout.simple_spinner_item, options);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        form.addView(spinner);
+        return spinner;
     }
 
     private void showGoldBatchDownloadDialog() {
@@ -535,21 +649,50 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         if (selected.isEmpty()) {
             return;
         }
-        final int[] selectedType = {0};
-        new AlertDialog.Builder(requireContext())
+        final Context context = requireContext();
+        final LinearLayout form = new LinearLayout(context);
+        form.setOrientation(LinearLayout.VERTICAL);
+        final int padding = (int) (16 * getResources().getDisplayMetrics().density);
+        form.setPadding(padding, 4, padding, 4);
+
+        final Spinner type = goldSpinner(form, R.string.gold_multi_download,
+                new String[]{getString(R.string.gold_batch_video),
+                        getString(R.string.gold_batch_audio)});
+        final Spinner quality = goldSpinner(form, R.string.gold_batch_select_quality,
+                new String[]{getString(R.string.gold_batch_quality_auto),
+                        "360p", "480p", "720p", "1080p"});
+        final Spinner track = goldSpinner(form, R.string.gold_batch_select_track,
+                new String[]{getString(R.string.gold_batch_track_auto),
+                        getString(R.string.gold_batch_track_german_original),
+                        getString(R.string.gold_batch_track_german_dubbed),
+                        getString(R.string.gold_batch_track_video_audio)});
+        final CheckBox wifiOnly = new CheckBox(context);
+        wifiOnly.setText(R.string.gold_batch_wifi_only);
+        wifiOnly.setChecked(true);
+        form.addView(wifiOnly);
+
+        new AlertDialog.Builder(context)
                 .setTitle(getString(R.string.gold_multi_download_count, selected.size()))
-                .setMessage(R.string.gold_multi_download_description)
-                .setSingleChoiceItems(new String[]{
-                        getString(R.string.gold_batch_video),
-                        getString(R.string.gold_batch_audio)
-                }, 0, (dialog, which) -> selectedType[0] = which)
+                .setView(form)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.download, (dialog, which) -> {
                     if (!PermissionHelper.checkStoragePermissions(requireActivity(),
                             PermissionHelper.DOWNLOAD_DIALOG_REQUEST_CODE)) {
                         return;
                     }
-                    BatchDownloadStarter.start(requireContext(), selected, selectedType[0] == 1);
+                    final String[] qualities = {"", "360p", "480p", "720p", "1080p"};
+                    final String[] audioTracks = {
+                            BatchDownloadStore.AUDIO_AUTO,
+                            BatchDownloadStore.AUDIO_ORIGINAL,
+                            BatchDownloadStore.AUDIO_DUBBED,
+                            BatchDownloadStore.AUDIO_EMBEDDED
+                    };
+                    final BatchDownloadStore.Options options =
+                            new BatchDownloadStore.Options(type.getSelectedItemPosition() == 1,
+                                    qualities[quality.getSelectedItemPosition()],
+                                    audioTracks[track.getSelectedItemPosition()],
+                                    wifiOnly.isChecked());
+                    BatchDownloadStarter.start(context, selected, options);
                     infoListAdapter.clearStreamSelection();
                 })
                 .show();

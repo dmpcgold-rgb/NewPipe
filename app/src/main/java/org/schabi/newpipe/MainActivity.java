@@ -61,6 +61,7 @@ import androidx.preference.PreferenceManager;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import org.schabi.newpipe.databinding.ActivityMainBinding;
+import org.schabi.newpipe.download.BatchDownloadStarter;
 import org.schabi.newpipe.databinding.DrawerHeaderBinding;
 import org.schabi.newpipe.databinding.DrawerLayoutBinding;
 import org.schabi.newpipe.databinding.InstanceSpinnerLayoutBinding;
@@ -230,6 +231,8 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         sharedPrefEditor.putBoolean(KEY_IS_IN_BACKGROUND, false).apply();
         Log.d(TAG, "App moved to foreground");
+        // Pending Gold batches are saved locally and can continue after an app restart.
+        BatchDownloadStarter.resumePending(this);
     }
 
     @Override
