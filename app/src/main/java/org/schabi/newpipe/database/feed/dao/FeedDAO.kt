@@ -89,7 +89,7 @@ abstract class FeedDAO {
             OR s.upload_date < :uploadDateBefore
         )
 
-        ORDER BY s.upload_date IS NULL DESC, s.upload_date DESC, s.uploader ASC
+        ORDER BY s.upload_date IS NULL ASC, s.upload_date DESC, s.uploader ASC
         LIMIT 500
         """
     )
