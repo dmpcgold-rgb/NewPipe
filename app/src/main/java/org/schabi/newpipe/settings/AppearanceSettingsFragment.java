@@ -2,6 +2,8 @@ package org.schabi.newpipe.settings;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import androidx.appcompat.app.AlertDialog;
+import org.schabi.newpipe.util.GoldDiagnostics;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.widget.Toast;
@@ -72,6 +74,14 @@ public class AppearanceSettingsFragment extends BasePreferenceFragment {
 
     @Override
     public boolean onPreferenceTreeClick(final Preference preference) {
+        if (getString(R.string.gold_diagnostics_key).equals(preference.getKey())) {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle(R.string.gold_diagnostics_title)
+                    .setMessage(GoldDiagnostics.report(requireContext()))
+                    .setPositiveButton(R.string.ok, null)
+                    .show();
+            return true;
+        }
         if (getString(R.string.caption_settings_key).equals(preference.getKey())) {
             try {
                 startActivity(new Intent(Settings.ACTION_CAPTIONING_SETTINGS));

@@ -253,6 +253,15 @@
 
     <!-- THEMES -->
     <string name="energy_saver_key">gold_energy_saver</string>
+    <string name="gold_list_text_size_key">gold_list_text_size</string>
+    <string name="gold_stable_list_animation_key">gold_stable_list_animation</string>
+    <string name="gold_diagnostics_key">gold_device_diagnostics</string>
+    <string name="gold_auto_skip_key">gold_auto_skip</string>
+    <string name="gold_intro_seconds_key">gold_intro_seconds</string>
+    <string name="gold_outro_seconds_key">gold_outro_seconds</string>
+    <string name="gold_speed_by_type_key">gold_speed_by_type</string>
+    <string name="gold_video_speed_key">gold_video_speed</string>
+    <string name="gold_audio_speed_key">gold_audio_speed</string>
     <string name="gold_wifi_max_quality_key">gold_wifi_max_quality</string>
     <string name="gold_mobile_data_saver_key">gold_mobile_data_saver</string>
     <string name="gold_low_battery_audio_key">gold_low_battery_audio</string>

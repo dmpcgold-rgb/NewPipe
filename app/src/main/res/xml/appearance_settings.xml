@@ -34,6 +34,27 @@
         app:iconSpaceReserved="false" />
 
     <ListPreference
+        android:defaultValue="15"
+        android:entries="@array/gold_video_title_size_labels"
+        android:entryValues="@array/gold_video_title_size_values"
+        android:key="@string/gold_list_text_size_key"
+        android:title="@string/gold_list_text_size_title"
+        android:summary="@string/gold_list_text_size_summary"
+        app:iconSpaceReserved="false"
+        app:useSimpleSummaryProvider="true" />
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="@string/gold_stable_list_animation_key"
+        android:title="@string/gold_stable_list_animation_title"
+        android:summary="@string/gold_stable_list_animation_summary"
+        app:iconSpaceReserved="false" />
+    <Preference
+        android:key="@string/gold_diagnostics_key"
+        android:title="@string/gold_diagnostics_title"
+        android:summary="@string/gold_diagnostics_summary"
+        app:iconSpaceReserved="false" />
+
+    <ListPreference
         android:defaultValue="@string/default_theme_value"
         android:entries="@array/theme_description_list"
         android:entryValues="@array/theme_values_list"

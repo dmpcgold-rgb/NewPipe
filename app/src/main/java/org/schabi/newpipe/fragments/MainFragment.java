@@ -195,12 +195,14 @@ public class MainFragment extends BaseFragment implements TabLayout.OnTabSelecte
                     getChildFragmentManager(), tabsList);
         }
 
-        binding.pager.setAdapter(null);
-        binding.pager.setAdapter(pagerAdapter);
-        if (prefs.getBoolean(getString(R.string.gold_remember_tab_key), true)
-                && pagerAdapter.getCount() > 0) {
-            binding.pager.setCurrentItem(Math.min(pagerAdapter.getCount() - 1,
-                    Math.max(0, prefs.getInt(GOLD_LAST_TAB, 0))), false);
+        if (binding.pager.getAdapter() != pagerAdapter) {
+            // Keep existing tab fragments and their scrolling positions during refresh.
+            binding.pager.setAdapter(pagerAdapter);
+            if (prefs.getBoolean(getString(R.string.gold_remember_tab_key), true)
+                    && pagerAdapter.getCount() > 0) {
+                binding.pager.setCurrentItem(Math.min(pagerAdapter.getCount() - 1,
+                        Math.max(0, prefs.getInt(GOLD_LAST_TAB, 0))), false);
+            }
         }
 
         updateTabsIconAndDescription();

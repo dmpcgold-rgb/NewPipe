@@ -115,6 +115,51 @@
         app:singleLineTitle="false"
         app:iconSpaceReserved="false">
 
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="@string/gold_auto_skip_key"
+            android:title="@string/gold_auto_skip_title"
+            android:summary="@string/gold_auto_skip_summary"
+            app:iconSpaceReserved="false" />
+        <ListPreference
+            android:defaultValue="10"
+            android:entries="@array/gold_skip_seconds_labels"
+            android:entryValues="@array/gold_skip_seconds_values"
+            android:key="@string/gold_intro_seconds_key"
+            android:title="@string/gold_intro_seconds_title"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            android:defaultValue="15"
+            android:entries="@array/gold_skip_seconds_labels"
+            android:entryValues="@array/gold_skip_seconds_values"
+            android:key="@string/gold_outro_seconds_key"
+            android:title="@string/gold_outro_seconds_title"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="@string/gold_speed_by_type_key"
+            android:title="@string/gold_speed_by_type_title"
+            android:summary="@string/gold_speed_by_type_summary"
+            app:iconSpaceReserved="false" />
+        <ListPreference
+            android:defaultValue="1.0"
+            android:entries="@array/gold_speed_labels"
+            android:entryValues="@array/gold_speed_values"
+            android:key="@string/gold_video_speed_key"
+            android:title="@string/gold_video_speed_title"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            android:defaultValue="1.0"
+            android:entries="@array/gold_speed_labels"
+            android:entryValues="@array/gold_speed_values"
+            android:key="@string/gold_audio_speed_key"
+            android:title="@string/gold_audio_speed_title"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+
         <ListPreference
             android:defaultValue="0"
             android:entries="@array/sleep_timer_labels"

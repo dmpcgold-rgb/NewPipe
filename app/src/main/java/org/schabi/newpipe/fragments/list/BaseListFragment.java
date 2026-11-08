@@ -260,6 +260,11 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         super.initViews(rootView, savedInstanceState);
 
         itemsList = rootView.findViewById(R.id.items_list);
+        if (PreferenceManager.getDefaultSharedPreferences(requireContext())
+                .getBoolean(getString(R.string.gold_stable_list_animation_key), true)) {
+            // Avoid blink/reorder animations as results arrive and when items are selected.
+            itemsList.setItemAnimator(null);
+        }
         refreshItemViewMode();
 
         final Supplier<View> listHeaderSupplier = getListHeaderSupplier();

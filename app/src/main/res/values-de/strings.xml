@@ -903,4 +903,26 @@
     <string name="gold_music_prefix_hint">Beispiel: A - oder 2026 -</string>
     <string name="gold_music_prefix_summary">Der ursprüngliche Musiktitel bleibt unverändert. Buchstaben oder Zahlen werden nur vor die ausgewählten Dateinamen gesetzt; unzulässige Dateizeichen werden ersetzt.</string>
     <string name="gold_music_prefix_numbered">Titel fortlaufend nummerieren (01, 02, 03…)</string>
+    <string name="gold_list_text_size_title">Videotitel-Schriftgröße</string>
+    <string name="gold_list_text_size_summary">Größe der Videotitel in Listen auswählen</string>
+    <string name="gold_stable_list_animation_title">Ruhige Listenübergänge</string>
+    <string name="gold_stable_list_animation_summary">Keine springenden Einblendungen beim Ändern von Listen</string>
+    <string name="gold_diagnostics_title">App-Selbsttest und Geräteprüfung</string>
+    <string name="gold_diagnostics_summary">Netzwerk, Speicher, Arbeitsspeicher und Zwischenspeicher lokal prüfen</string>
+    <string name="gold_diagnostics_network">Netzwerk verbunden</string>
+    <string name="gold_diagnostics_memory">Freier Gerätespeicher</string>
+    <string name="gold_diagnostics_ram">Wenig Arbeitsspeicher</string>
+    <string name="gold_diagnostics_cache">Zwischengespeicherte Einträge</string>
+    <string name="gold_diagnostics_saver">Energiesparmodus aktiv</string>
+    <string name="gold_diagnostics_note">Diese Prüfung testet den Gerätezustand. Sie ersetzt keine vollständigen Wiedergabe- und Downloadtests.</string>
+    <string name="gold_auto_skip_title">Intro und Outro automatisch überspringen</string>
+    <string name="gold_auto_skip_summary">Optional: Beginn und Ende normaler Videos anhand eingestellter Sekunden überspringen; funktioniert nicht bei Livestreams.</string>
+    <string name="gold_intro_seconds_title">Intro überspringen</string>
+    <string name="gold_outro_seconds_title">Outro überspringen</string>
+    <string name="gold_speed_by_type_title">Eigene Geschwindigkeiten für Video und Audio</string>
+    <string name="gold_speed_by_type_summary">Merkt unterschiedliche Geschwindigkeiten für Videos und Audioinhalte; manuelle Änderungen pro Art werden übernommen.</string>
+    <string name="gold_video_speed_title">Videogeschwindigkeit</string>
+    <string name="gold_audio_speed_title">Audiogeschwindigkeit</string>
+    <string-array name="gold_video_title_size_labels"><item>14 sp</item><item>15 sp</item><item>17 sp</item><item>19 sp</item></string-array>
+    <string-array name="gold_skip_seconds_labels"><item>0 Sekunden</item><item>5 Sekunden</item><item>10 Sekunden</item><item>15 Sekunden</item><item>20 Sekunden</item><item>30 Sekunden</item></string-array>
 </resources>

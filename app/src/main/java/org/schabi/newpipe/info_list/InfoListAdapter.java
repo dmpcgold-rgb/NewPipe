@@ -434,8 +434,14 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                                         holder.itemView.getContext().getString(
                                                 R.string.gold_compact_cards_key), false);
                 streamHolder.itemVideoTitleView.setMaxLines(compact ? 1 : 2);
+                final String sizePreference =
+                        PreferenceManager.getDefaultSharedPreferences(
+                                holder.itemView.getContext()).getString(
+                                        holder.itemView.getContext().getString(
+                                                R.string.gold_list_text_size_key), "15");
+                final int size = parseVideoTitleSize(sizePreference);
                 streamHolder.itemVideoTitleView.setTextSize(
-                        TypedValue.COMPLEX_UNIT_SP, compact ? 14 : 15);
+                        TypedValue.COMPLEX_UNIT_SP, compact ? Math.max(14, size - 1) : size);
                 final boolean selected = selectedStreams.containsKey(streamKey(stream));
                 final Drawable overlay = selected
                         ? holder.itemView.getContext().getDrawable(
@@ -449,6 +455,14 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                         selected ? (int) (8 * holder.itemView.getResources()
                                 .getDisplayMetrics().density) : 0);
             }
+        }
+    }
+
+    private static int parseVideoTitleSize(@Nullable final String value) {
+        try {
+            return Math.max(14, Math.min(19, Integer.parseInt(value)));
+        } catch (final NumberFormatException exception) {
+            return 15;
         }
     }
 
