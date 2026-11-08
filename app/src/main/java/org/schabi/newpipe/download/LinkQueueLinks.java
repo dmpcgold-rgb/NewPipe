@@ -85,6 +85,25 @@ public final class LinkQueueLinks {
         }
     }
 
+    /**
+     * Matches only the official VOE hostname and its subdomains.
+     *
+     * @param value candidate web address
+     * @return whether this is a VOE HTTPS address
+     */
+    public static boolean isVoeUrl(final String value) {
+        if (!isSafeHttps(value)) {
+            return false;
+        }
+        try {
+            final String host = new URI(value).getHost();
+            return host != null && ("voe.sx".equalsIgnoreCase(host)
+                    || host.toLowerCase(Locale.ROOT).endsWith(".voe.sx"));
+        } catch (final URISyntaxException ex) {
+            return false;
+        }
+    }
+
     public static String describe(final String value) {
         if (!isSafeHttps(value)) {
             return "Ungültiger Link";
