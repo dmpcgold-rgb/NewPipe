@@ -8,5 +8,8 @@ plugins {
 }
 
 repositories {
+    // Kotlin compiler artifacts are also on Maven Central. Prefer it to the plugin portal,
+    // which can redirect large Kotlin artifacts to GitHub and intermittently return HTTP 504.
+    mavenCentral()
     gradlePluginPortal()
 }
