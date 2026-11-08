@@ -8,6 +8,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.json.JSONObject;
+import org.schabi.newpipe.extractor.MediaFormat;
 import org.junit.Test;
 
 /** Instrumented tests for durable multi-download queue records. */
@@ -98,4 +99,34 @@ public class BatchDownloadStoreTest {
 
         assertFalse(video.key().equals(audio.key()));
     }
+    @Test
+    public void mp3FormatNeverAcceptsAacOrOpusData() {
+        assertTrue(BatchDownloadStarter.matchesAudioFormat(
+                MediaFormat.MP3, BatchDownloadStore.FORMAT_MP3));
+        assertFalse(BatchDownloadStarter.matchesAudioFormat(
+                MediaFormat.M4A, BatchDownloadStore.FORMAT_MP3));
+        assertFalse(BatchDownloadStarter.matchesAudioFormat(
+                MediaFormat.WEBMA_OPUS, BatchDownloadStore.FORMAT_MP3));
+    }
+
+    @Test
+    public void opusCanBeExtractedFromWebmWithoutMp3Transcoding() {
+        assertTrue(BatchDownloadStarter.matchesAudioFormat(
+                MediaFormat.OPUS, BatchDownloadStore.FORMAT_OPUS));
+        assertTrue(BatchDownloadStarter.matchesAudioFormat(
+                MediaFormat.WEBMA_OPUS, BatchDownloadStore.FORMAT_OPUS));
+        assertFalse(BatchDownloadStarter.matchesAudioFormat(
+                MediaFormat.M4A, BatchDownloadStore.FORMAT_OPUS));
+    }
+
+    @Test
+    public void webmPreservesWebmAudioStreams() {
+        assertTrue(BatchDownloadStarter.matchesAudioFormat(
+                MediaFormat.WEBMA, BatchDownloadStore.FORMAT_WEBM));
+        assertTrue(BatchDownloadStarter.matchesAudioFormat(
+                MediaFormat.WEBMA_OPUS, BatchDownloadStore.FORMAT_WEBM));
+        assertFalse(BatchDownloadStarter.matchesAudioFormat(
+                MediaFormat.MP3, BatchDownloadStore.FORMAT_WEBM));
+    }
+
 }
