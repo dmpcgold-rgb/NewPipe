@@ -144,7 +144,7 @@ public class LinkQueueActivity extends AppCompatActivity {
                 button("Keine markieren", view -> setSelected(false)));
         addRow(root, button("Auswahl herunterladen", view -> downloadSelected()),
                 button("Im Browser öffnen", view -> openSelected()));
-        root.addView(button("VOE • offiziellen Download öffnen",
+        root.addView(button("Hoster öffnen • VOE auswählen",
                 view -> openVoeSelected()));
         addRow(root, button("Auswahl entfernen", view -> removeSelected()),
                 button("Systemdownloads", view -> openSystemDownloads()));
@@ -182,8 +182,9 @@ public class LinkQueueActivity extends AppCompatActivity {
     }
 
     private void addLinks(final String pasted) {
+        final List<String> imported = LinkQueueLinks.extractLinks(pasted);
         int added = 0;
-        for (final String url : LinkQueueLinks.extractLinks(pasted)) {
+        for (final String url : imported) {
             if (links.size() >= MAX_LINKS) {
                 break;
             }
@@ -191,12 +192,18 @@ public class LinkQueueActivity extends AppCompatActivity {
                 added++;
             }
         }
-        if (added == 0 && !pasted.trim().isEmpty()) {
-            Toast.makeText(this, "Kein neuer gültiger HTTPS-Link gefunden",
+        if (imported.isEmpty() && !pasted.trim().isEmpty()) {
+            Toast.makeText(this, "Kein gültiger HTTPS-Link gefunden",
                     Toast.LENGTH_LONG).show();
         }
         saveLinks();
         refreshList();
+        // A single pasted episode URL opens the host chooser immediately.
+        // The original link remains saved for later use.
+        if (imported.size() == 1 && LinkQueueLinks.isEpisodePage(imported.get(0))
+                && links.contains(imported.get(0))) {
+            openEpisodePage(imported.get(0));
+        }
     }
 
     private void refreshList() {
@@ -262,13 +269,26 @@ public class LinkQueueActivity extends AppCompatActivity {
 
     private void openVoeSelected() {
         final List<String> selected = selectedLinks();
-        if (selected.size() != 1 || !LinkQueueLinks.isVoeUrl(selected.get(0))) {
-            Toast.makeText(this, "Bitte genau einen VOE-Link markieren",
+        if (selected.size() != 1) {
+            Toast.makeText(this, "Bitte genau einen Link markieren",
                     Toast.LENGTH_LONG).show();
             return;
         }
-        startActivity(new Intent(this, VoeBrowserActivity.class)
-                .putExtra(VoeBrowserActivity.EXTRA_VOE_URL, selected.get(0)));
+        final String url = selected.get(0);
+        if (LinkQueueLinks.isEpisodePage(url)) {
+            openEpisodePage(url);
+        } else if (LinkQueueLinks.isVoeUrl(url)) {
+            startActivity(new Intent(this, VoeBrowserActivity.class)
+                    .putExtra(VoeBrowserActivity.EXTRA_VOE_URL, url));
+        } else {
+            Toast.makeText(this, "Nur Episodenseiten und VOE-Links unterstützt",
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void openEpisodePage(final String url) {
+        startActivity(new Intent(this, EpisodeHostActivity.class)
+                .putExtra(EpisodeHostActivity.EXTRA_EPISODE_URL, url));
     }
 
     private String filename(final String url, final int index) {
