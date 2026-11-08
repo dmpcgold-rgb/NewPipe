@@ -43,6 +43,23 @@ public class BatchDownloadStoreTest {
     }
 
     @Test
+    public void musicTitleIsPreservedWithOnlyTheSelectedPrefix() {
+        assertEquals("A - Originaltitel – Künstler.m4a",
+                BatchFilenameHelper.audioFilename(
+                        "A - ", "Originaltitel – Künstler", "m4a"));
+        assertEquals("01 Originaltitel.mp3",
+                BatchFilenameHelper.audioFilename("01 ", "Originaltitel", "mp3"));
+        assertEquals("Originaltitel.opus",
+                BatchFilenameHelper.audioFilename("", "Originaltitel", "opus"));
+    }
+
+    @Test
+    public void invalidFilenameCharactersAreSanitizedWithoutRenamingTheSong() {
+        assertEquals("B_ Musik_Titel.webm",
+                BatchFilenameHelper.audioFilename("B/ ", "Musik:Titel", "webm"));
+    }
+
+    @Test
     public void differentYoutubeUrlsWithSameIdAreDuplicates() {
         final BatchDownloadStore.Entry longUrl = new BatchDownloadStore.Entry();
         longUrl.serviceId = 0;

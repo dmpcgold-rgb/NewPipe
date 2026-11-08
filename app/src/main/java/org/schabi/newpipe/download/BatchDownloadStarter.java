@@ -331,8 +331,10 @@ public final class BatchDownloadStarter implements ServiceConnection {
             if (item.audioOnly) {
                 // Music filenames keep the video title unchanged except for unsafe file chars.
                 // No automatic hash, suffix or title rewrite; optional text is prepended only.
+                final String originalTitle = item.title == null || item.title.isBlank()
+                        ? info.getName() : item.title;
                 name = BatchFilenameHelper.audioFilename(
-                        item.filenamePrefix, info.getName(), spec.extension);
+                        item.filenamePrefix, originalTitle, spec.extension);
             } else {
                 final String cleanTitle = FilenameUtils.createFilename(
                         appContext, info.getName());
