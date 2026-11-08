@@ -93,13 +93,16 @@ class FeedViewModel(
             mutableStateLiveData.postValue(
                 when (event) {
                     is IdleEvent -> FeedState.LoadedState(listFromDB.map { e -> StreamItem(e) }, oldestUpdate, notLoadedCount, listOf())
+
                     is ProgressEvent -> FeedState.ProgressState(
                         event.currentProgress,
                         event.maxProgress,
                         event.progressMessage,
                         listFromDB.map { e -> StreamItem(e) }
                     )
+
                     is SuccessResultEvent -> FeedState.LoadedState(listFromDB.map { e -> StreamItem(e) }, oldestUpdate, notLoadedCount, event.itemsErrors)
+
                     is ErrorResultEvent -> FeedState.ErrorState(event.error)
                 }
             )
