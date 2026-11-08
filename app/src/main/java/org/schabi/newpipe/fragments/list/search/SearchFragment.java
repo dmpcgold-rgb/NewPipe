@@ -112,6 +112,15 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
      * to fetch/show the suggestions, in milliseconds.
      */
     private static final int SUGGESTIONS_DEBOUNCE = 120; //ms
+    private static final int GOLD_DURATION_GROUP = 88;
+    private static final int GOLD_DURATION_ALL = 9100;
+    private static final int GOLD_DURATION_SHORT = 9101;
+    private static final int GOLD_DURATION_MEDIUM = 9102;
+    private static final int GOLD_DURATION_LONG = 9103;
+    private static final long GOLD_SHORT_SECONDS = 300;
+    private static final long GOLD_MEDIUM_SECONDS = 1200;
+    @State
+    int goldDurationFilter = GOLD_DURATION_ALL;
     private final PublishSubject<String> suggestionPublisher = PublishSubject.create();
 
     @State
@@ -491,6 +500,19 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
         menu.setGroupCheckable(1, true, true);
 
         restoreFilterChecked(menu, filterItemCheckedId);
+        menu.add(GOLD_DURATION_GROUP, GOLD_DURATION_ALL, 20,
+                R.string.gold_search_duration_all);
+        menu.add(GOLD_DURATION_GROUP, GOLD_DURATION_SHORT, 21,
+                R.string.gold_search_duration_short);
+        menu.add(GOLD_DURATION_GROUP, GOLD_DURATION_MEDIUM, 22,
+                R.string.gold_search_duration_medium);
+        menu.add(GOLD_DURATION_GROUP, GOLD_DURATION_LONG, 23,
+                R.string.gold_search_duration_long);
+        menu.setGroupCheckable(GOLD_DURATION_GROUP, true, true);
+        final MenuItem duration = menu.findItem(goldDurationFilter);
+        if (duration != null) {
+            duration.setChecked(true);
+        }
     }
 
     private SpannableString getStyledHeader(final String title) {
@@ -505,6 +527,16 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
     @Override
     public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
         if (handleGoldSelectionAction(item)) {
+            return true;
+        }
+        if (item.getGroupId() == GOLD_DURATION_GROUP) {
+            if (goldDurationFilter != item.getItemId()) {
+                goldDurationFilter = item.getItemId();
+                item.setChecked(true);
+                if (!TextUtils.isEmpty(searchString)) {
+                    search(searchString, contentFilter, sortFilter);
+                }
+            }
             return true;
         }
         final var filter = Collections.singletonList(menuItemToFilterName.get(item.getItemId()));
@@ -1089,8 +1121,9 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
         nextPage = result.getNextPage();
 
         if (infoListAdapter.getItemsList().isEmpty()) {
-            if (!result.getRelatedItems().isEmpty()) {
-                infoListAdapter.addInfoItemList(result.getRelatedItems());
+            final List<InfoItem> visible = filterGoldDuration(result.getRelatedItems());
+            if (!visible.isEmpty()) {
+                infoListAdapter.addInfoItemList(visible);
             } else {
                 infoListAdapter.clearStreamItemList();
                 showEmptyState();
@@ -1099,6 +1132,39 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
         }
 
         super.handleResult(result);
+    }
+
+    private List<InfoItem> filterGoldDuration(final List<? extends InfoItem> items) {
+        if (goldDurationFilter == GOLD_DURATION_ALL) {
+            return new ArrayList<>(items);
+        }
+        final List<InfoItem> filtered = new ArrayList<>();
+        for (final InfoItem item : items) {
+            if (item instanceof StreamInfoItem stream && matchesGoldDuration(
+                    goldDurationFilter, stream.getDuration())) {
+                filtered.add(item);
+            }
+        }
+        return filtered;
+    }
+
+    static boolean matchesGoldDuration(final int filter, final long seconds) {
+        if (filter == GOLD_DURATION_ALL) {
+            return true;
+        }
+        if (seconds < 0) {
+            return false;
+        }
+        switch (filter) {
+            case GOLD_DURATION_SHORT:
+                return seconds < GOLD_SHORT_SECONDS;
+            case GOLD_DURATION_MEDIUM:
+                return seconds >= GOLD_SHORT_SECONDS && seconds <= GOLD_MEDIUM_SECONDS;
+            case GOLD_DURATION_LONG:
+                return seconds > GOLD_MEDIUM_SECONDS;
+            default:
+                return true;
+        }
     }
 
     private void handleSearchSuggestion() {
@@ -1135,7 +1201,7 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
     @Override
     public void handleNextItems(final ListExtractor.InfoItemsPage<?> result) {
         showListFooter(false);
-        infoListAdapter.addInfoItemList(result.getItems());
+        infoListAdapter.addInfoItemList(filterGoldDuration(result.getItems()));
 
         if (!result.getErrors().isEmpty()) {
             // nextPage should be non-null at this point, because it refers to the page

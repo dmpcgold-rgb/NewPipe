@@ -1015,4 +1015,8 @@
     <string name="gold_podcast_speed_title">Podcast speed</string>
     <string name="gold_home_bookmarks">Saved playlists and bookmarks</string>
     <string name="gold_home_history">Viewing history</string>
+    <string name="gold_search_duration_all">Duration: all videos</string>
+    <string name="gold_search_duration_short">Duration: under 5 minutes</string>
+    <string name="gold_search_duration_medium">Duration: 5–20 minutes</string>
+    <string name="gold_search_duration_long">Duration: over 20 minutes</string>
 </resources>

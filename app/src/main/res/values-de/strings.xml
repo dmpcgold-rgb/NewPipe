@@ -934,4 +934,8 @@
     <string name="gold_podcast_speed_title">Podcast-Geschwindigkeit</string>
     <string name="gold_home_bookmarks">Merkliste und Playlists</string>
     <string name="gold_home_history">Wiedergabeverlauf</string>
+    <string name="gold_search_duration_all">Länge: alle Videos</string>
+    <string name="gold_search_duration_short">Länge: unter 5 Minuten</string>
+    <string name="gold_search_duration_medium">Länge: 5–20 Minuten</string>
+    <string name="gold_search_duration_long">Länge: über 20 Minuten</string>
 </resources>
