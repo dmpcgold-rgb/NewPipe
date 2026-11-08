@@ -28,6 +28,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -163,6 +164,20 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
 
         objectsToSave.add(infoListAdapter.getItemsList());
         objectsToSave.add(getFocusedPosition());
+        // Store the scroll anchor as integers: the StateSaver can write them to disk,
+        // unlike a LayoutManager Parcelable which may not be serializable.
+        int firstVisible = -1;
+        int topOffset = 0;
+        if (itemsList != null && itemsList.getLayoutManager()
+                instanceof LinearLayoutManager linearLayout) {
+            firstVisible = linearLayout.findFirstVisibleItemPosition();
+            final View first = linearLayout.findViewByPosition(firstVisible);
+            if (first != null) {
+                topOffset = first.getTop() - itemsList.getPaddingTop();
+            }
+        }
+        objectsToSave.add(firstVisible);
+        objectsToSave.add(topOffset);
     }
 
     @Override
@@ -175,6 +190,20 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         infoListAdapter.getItemsList().clear();
         infoListAdapter.getItemsList().addAll((List<InfoItem>) savedObjects.poll());
         restoreFocus((Integer) savedObjects.poll());
+        // Older versions have only the first two state fields.
+        final Object anchor = savedObjects.poll();
+        final Object offset = savedObjects.poll();
+        if (anchor instanceof Integer firstVisible && firstVisible >= 0
+                && itemsList != null) {
+            final int topOffset = offset instanceof Integer value ? value : 0;
+            itemsList.post(() -> {
+                if (itemsList != null && itemsList.getLayoutManager()
+                        instanceof LinearLayoutManager layout
+                        && infoListAdapter.getItemCount() > firstVisible) {
+                    layout.scrollToPositionWithOffset(firstVisible, topOffset);
+                }
+            });
+        }
     }
 
     private void restoreFocus(final Integer position) {
