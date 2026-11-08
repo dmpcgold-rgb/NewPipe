@@ -67,7 +67,7 @@ public final class LinkQueueLinks {
         }
     }
 
-    /** Direct files can use Android DownloadManager; HTML pages and HLS playlists cannot. */
+    // Direct files can use Android DownloadManager; HTML pages and HLS playlists cannot.
     public static boolean isDirectMedia(final String value) {
         if (!isSafeHttps(value)) {
             return false;
