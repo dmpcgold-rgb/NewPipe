@@ -107,6 +107,18 @@ class FeedFragment : BaseStateFragment<FeedState>() {
     private var isRefreshing = false
 
     private var lastNewItemsCount = 0
+    private val autoRefreshIntervalMillis = 5 * 60 * 1000L
+
+    private fun lastRefreshKey(): String = "gold_feed_auto_refresh_last_$groupId"
+
+    private fun refreshIfStale() {
+        val preferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        val now = System.currentTimeMillis()
+        val previous = preferences.getLong(lastRefreshKey(), 0L)
+        if (previous > now || now - previous >= autoRefreshIntervalMillis) {
+            reloadContent()
+        }
+    }
 
     init {
         setHasOptionsMenu(true)
@@ -139,7 +151,6 @@ class FeedFragment : BaseStateFragment<FeedState>() {
 
         val factory = FeedViewModel.getFactory(requireContext(), groupId)
         viewModel = ViewModelProvider(this, factory)[FeedViewModel::class.java]
-        viewModel.stateLiveData.observe(viewLifecycleOwner) { it?.let(::handleResult) }
 
         groupAdapter = GroupieAdapter().apply {
             setOnItemClickListener(listenerStreamItem)
@@ -161,6 +172,9 @@ class FeedFragment : BaseStateFragment<FeedState>() {
 
         feedBinding.itemsList.adapter = groupAdapter
         setupListViewMode()
+        // Initialize the list before observing cached results, which can arrive immediately.
+        viewModel.stateLiveData.observe(viewLifecycleOwner) { it?.let(::handleResult) }
+        refreshIfStale()
     }
 
     override fun onPause() {
@@ -350,7 +364,9 @@ class FeedFragment : BaseStateFragment<FeedState>() {
             is FeedState.ErrorState -> if (handleErrorState(result)) return
         }
 
-        updateRefreshViewState()
+        if (result !is FeedState.ProgressState || result.items.isEmpty()) {
+            updateRefreshViewState()
+        }
     }
 
     override fun handleError() {
@@ -363,7 +379,29 @@ class FeedFragment : BaseStateFragment<FeedState>() {
     }
 
     private fun handleProgressState(progressState: FeedState.ProgressState) {
-        showLoading()
+        if (progressState.items.isNotEmpty()) {
+            val itemVersion = when (getItemViewMode(requireContext())) {
+                ItemViewMode.GRID -> StreamItem.ItemVersion.GRID
+                ItemViewMode.CARD -> StreamItem.ItemVersion.CARD
+                else -> StreamItem.ItemVersion.NORMAL
+            }
+            progressState.items.forEach { it.itemVersion = itemVersion }
+            groupAdapter.updateAsync(progressState.items, false)
+        }
+
+        if (progressState.items.isNotEmpty() || groupAdapter.itemCount > 0) {
+            // Do not hide the newest videos behind a full-screen loading state.
+            super.hideLoading()
+            feedBinding.itemsList.animate(true, 0)
+            feedBinding.loadingProgressText.animate(false, 0)
+            feedBinding.refreshRootView.animate(true, 0)
+            feedBinding.refreshText.text =
+                "Prüfe Abos: ${progressState.currentProgress}/${progressState.maxProgress}"
+            feedBinding.swipeRefreshLayout.isRefreshing = true
+            isRefreshing = true
+        } else {
+            showLoading()
+        }
 
         val isIndeterminate = progressState.currentProgress == -1 &&
             progressState.maxProgress == -1
@@ -393,7 +431,7 @@ class FeedFragment : BaseStateFragment<FeedState>() {
 
     private val listenerStreamItem = object : OnItemClickListener, OnItemLongClickListener {
         override fun onItemClick(item: Item<*>, view: View) {
-            if (item is StreamItem && !isRefreshing) {
+            if (item is StreamItem) {
                 val stream = item.streamWithState.stream
                 NavigationHelper.openVideoDetailFragment(
                     requireContext(),
@@ -408,7 +446,7 @@ class FeedFragment : BaseStateFragment<FeedState>() {
         }
 
         override fun onItemLongClick(item: Item<*>, view: View): Boolean {
-            if (item is StreamItem && !isRefreshing) {
+            if (item is StreamItem) {
                 showInfoItemDialog(item.streamWithState.stream.toStreamInfoItem())
                 return true
             }
@@ -681,6 +719,9 @@ class FeedFragment : BaseStateFragment<FeedState>() {
 
     override fun reloadContent() {
         hideNewItemsLoaded(false)
+        PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
+            putLong(lastRefreshKey(), System.currentTimeMillis())
+        }
 
         getActivity()?.startService(
             Intent(requireContext(), FeedLoadService::class.java).apply {
