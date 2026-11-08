@@ -965,4 +965,13 @@
     <string name="gold_batch_audio_format_webm">WebM audio (.webm)</string>
     <string name="gold_batch_audio_format_note">YouTube normally offers M4A or Opus, not MP3. MP3 conversion is not included. Unavailable formats appear in the error list.</string>
     <string name="gold_batch_format_not_offered">%1$s not offered by video source (conversion required)</string>
+    <string name="gold_mobile_data_saver_title">Reduce video quality on mobile data</string>
+    <string name="gold_mobile_data_saver_summary">On metered connections, new videos start at 360p. You can still select higher quality manually.</string>
+    <string name="gold_low_battery_audio_title">Play audio only when battery is low</string>
+    <string name="gold_low_battery_audio_summary">Optional: when battery saver is active or charge drops below 20%, switch new playback to audio-only. This may reload the stream.</string>
+    <string name="gold_compact_cards_title">Compact video cards</string>
+    <string name="gold_compact_cards_summary">Show one title line on video lists and reduce padding.</string>
+    <string name="gold_remember_tab_title">Remember home tab</string>
+    <string name="gold_remember_tab_summary">Open the last-used home tab on the next launch.</string>
+    <string name="gold_storage_low">Not enough free storage (keep at least 128 MB available).</string>
 </resources>

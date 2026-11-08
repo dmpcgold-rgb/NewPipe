@@ -2,6 +2,7 @@ package org.schabi.newpipe.info_list;
 
 import android.content.Context;
 import android.util.Log;
+import android.util.TypedValue;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.schabi.newpipe.R;
+import androidx.preference.PreferenceManager;
 import org.schabi.newpipe.databinding.PignateFooterBinding;
 import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.channel.ChannelInfoItem;
@@ -426,6 +428,14 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             ((InfoItemHolder) holder).updateFromItem(infoItem, recordManager);
             if (infoItem instanceof StreamInfoItem stream
                     && holder instanceof StreamMiniInfoItemHolder streamHolder) {
+                final boolean compact =
+                        PreferenceManager.getDefaultSharedPreferences(
+                                holder.itemView.getContext()).getBoolean(
+                                        holder.itemView.getContext().getString(
+                                                R.string.gold_compact_cards_key), false);
+                streamHolder.itemVideoTitleView.setMaxLines(compact ? 1 : 2);
+                streamHolder.itemVideoTitleView.setTextSize(
+                        TypedValue.COMPLEX_UNIT_SP, compact ? 14 : 15);
                 final boolean selected = selectedStreams.containsKey(streamKey(stream));
                 final Drawable overlay = selected
                         ? holder.itemView.getContext().getDrawable(

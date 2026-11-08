@@ -58,6 +58,7 @@ public class MainFragment extends BaseFragment implements TabLayout.OnTabSelecte
     private TabsManager tabsManager;
 
     private boolean hasTabsChanged = false;
+    private static final String GOLD_LAST_TAB = "gold_last_home_tab";
 
     private SharedPreferences prefs;
     private boolean youtubeRestrictedModeEnabled;
@@ -196,6 +197,11 @@ public class MainFragment extends BaseFragment implements TabLayout.OnTabSelecte
 
         binding.pager.setAdapter(null);
         binding.pager.setAdapter(pagerAdapter);
+        if (prefs.getBoolean(getString(R.string.gold_remember_tab_key), true)
+                && pagerAdapter.getCount() > 0) {
+            binding.pager.setCurrentItem(Math.min(pagerAdapter.getCount() - 1,
+                    Math.max(0, prefs.getInt(GOLD_LAST_TAB, 0))), false);
+        }
 
         updateTabsIconAndDescription();
         updateTitleForTab(binding.pager.getCurrentItem());
@@ -262,6 +268,9 @@ public class MainFragment extends BaseFragment implements TabLayout.OnTabSelecte
             Log.d(TAG, "onTabSelected() called with: selectedTab = [" + selectedTab + "]");
         }
         updateTitleForTab(selectedTab.getPosition());
+        if (prefs.getBoolean(getString(R.string.gold_remember_tab_key), true)) {
+            prefs.edit().putInt(GOLD_LAST_TAB, selectedTab.getPosition()).apply();
+        }
     }
 
     @Override

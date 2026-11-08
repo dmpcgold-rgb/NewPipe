@@ -11,6 +11,20 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="@string/gold_compact_cards_key"
+        android:title="@string/gold_compact_cards_title"
+        android:summary="@string/gold_compact_cards_summary"
+        app:iconSpaceReserved="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="@string/gold_remember_tab_key"
+        android:title="@string/gold_remember_tab_title"
+        android:summary="@string/gold_remember_tab_summary"
+        app:iconSpaceReserved="false" />
+
     <ListPreference
         android:defaultValue="@string/default_theme_value"
         android:entries="@array/theme_description_list"

@@ -3,6 +3,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:title="@string/settings_category_video_audio_title">
 
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="@string/gold_mobile_data_saver_key"
+        android:title="@string/gold_mobile_data_saver_title"
+        android:summary="@string/gold_mobile_data_saver_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="@string/gold_low_battery_audio_key"
+        android:title="@string/gold_low_battery_audio_title"
+        android:summary="@string/gold_low_battery_audio_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <ListPreference
         android:defaultValue="@string/default_resolution_value"
         android:entries="@array/resolution_list_description"

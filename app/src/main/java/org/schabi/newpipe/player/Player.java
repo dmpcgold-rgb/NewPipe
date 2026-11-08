@@ -123,6 +123,7 @@ import org.schabi.newpipe.player.ui.VideoPlayerUi;
 import org.schabi.newpipe.util.DependentPreferenceHelper;
 import org.schabi.newpipe.util.ExtractorHelper;
 import org.schabi.newpipe.util.ListHelper;
+import org.schabi.newpipe.util.GoldPowerPolicy;
 import org.schabi.newpipe.util.NavigationHelper;
 import org.schabi.newpipe.util.SerializedCache;
 import org.schabi.newpipe.util.StreamTypeUtil;
@@ -1201,6 +1202,10 @@ public final class Player implements PlaybackListener, Listener {
         }
 
         UIs.call(PlayerUi::onPrepared);
+        // Opt-in: reduce playback work under low battery, only once per active stream.
+        if (!isAudioOnly && GoldPowerPolicy.shouldUseAudioOnLowBattery(context)) {
+            useVideoAndSubtitles(false);
+        }
     }
 
     private void onBlocked() {

@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 
 import org.schabi.newpipe.R;
+import org.schabi.newpipe.util.GoldPowerPolicy;
 import org.schabi.newpipe.extractor.MediaFormat;
 import org.schabi.newpipe.extractor.stream.AudioStream;
 import org.schabi.newpipe.extractor.stream.AudioTrackType;
@@ -80,8 +81,9 @@ public final class ListHelper {
      */
     public static int getDefaultResolutionIndex(final Context context,
                                                 final List<VideoStream> videoStreams) {
-        final String defaultResolution = computeDefaultResolution(context,
-                R.string.default_resolution_key, R.string.default_resolution_value);
+        final String defaultResolution = GoldPowerPolicy.shouldReduceVideoQuality(context)
+                ? "360p" : computeDefaultResolution(context,
+                        R.string.default_resolution_key, R.string.default_resolution_value);
         return getDefaultResolutionWithDefaultFormat(context, defaultResolution, videoStreams);
     }
 

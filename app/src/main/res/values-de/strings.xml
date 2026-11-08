@@ -888,4 +888,13 @@
     <string name="gold_batch_audio_format_webm">WebM-Audio (.webm)</string>
     <string name="gold_batch_audio_format_note">YouTube bietet normalerweise M4A oder Opus, aber kein MP3. Eine MP3-Umwandlung ist noch nicht integriert. Nicht verfügbare Formate erscheinen in der Fehlerliste.</string>
     <string name="gold_batch_format_not_offered">%1$s von Videoquelle nicht angeboten (Umwandlung erforderlich)</string>
+    <string name="gold_mobile_data_saver_title">Bei Mobilfunk Videoqualität reduzieren</string>
+    <string name="gold_mobile_data_saver_summary">Bei getakteten Verbindungen starten neue Videos mit 360p. Höhere Qualität bleibt manuell wählbar.</string>
+    <string name="gold_low_battery_audio_title">Bei niedrigem Akku nur Ton abspielen</string>
+    <string name="gold_low_battery_audio_summary">Optional: Bei Energiesparmodus oder unter 20 % Akku neue Wiedergabe auf Audio umstellen. Dabei kann das Video neu laden.</string>
+    <string name="gold_compact_cards_title">Kompakte Videokarten</string>
+    <string name="gold_compact_cards_summary">Videotitel einzeilig anzeigen und die Listen kompakter gestalten.</string>
+    <string name="gold_remember_tab_title">Startreiter merken</string>
+    <string name="gold_remember_tab_summary">Beim nächsten Öffnen den zuletzt verwendeten Startreiter anzeigen.</string>
+    <string name="gold_storage_low">Zu wenig freier Speicher (mindestens 128 MB freihalten).</string>
 </resources>

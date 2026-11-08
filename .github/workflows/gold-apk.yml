@@ -36,8 +36,41 @@ jobs:
           java-version: '21'
           cache: gradle
 
+      # Configure all four secrets once in Settings > Secrets and variables > Actions:
+      # GOLD_KEYSTORE_BASE64, GOLD_STORE_PASSWORD, GOLD_KEY_ALIAS, GOLD_KEY_PASSWORD.
+      # Using a stable keystore preserves Android updates between GitHub Actions runs.
+      - name: Prepare stable signing keystore
+        env:
+          GOLD_KEYSTORE_BASE64: ${{ secrets.GOLD_KEYSTORE_BASE64 }}
+          GOLD_STORE_PASSWORD: ${{ secrets.GOLD_STORE_PASSWORD }}
+          GOLD_KEY_ALIAS: ${{ secrets.GOLD_KEY_ALIAS }}
+          GOLD_KEY_PASSWORD: ${{ secrets.GOLD_KEY_PASSWORD }}
+        run: |
+          if [ -n "$GOLD_KEYSTORE_BASE64" ]; then
+            if [ -z "$GOLD_STORE_PASSWORD" ] || [ -z "$GOLD_KEY_ALIAS" ] || [ -z "$GOLD_KEY_PASSWORD" ]; then
+              echo "::error::Configure all four Gold signing secrets."
+              exit 1
+            fi
+            printf '%s' "$GOLD_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/gold-release.jks"
+            chmod 600 "$RUNNER_TEMP/gold-release.jks"
+            echo "GOLD_SIGNING_STORE_FILE=$RUNNER_TEMP/gold-release.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Stable signing secrets missing: debug-signed test APK cannot reliably update older builds."
+          fi
+
       - name: Check code style and build continuous APK
+        env:
+          GOLD_SIGNING_STORE_PASSWORD: ${{ secrets.GOLD_STORE_PASSWORD }}
+          GOLD_SIGNING_KEY_ALIAS: ${{ secrets.GOLD_KEY_ALIAS }}
+          GOLD_SIGNING_KEY_PASSWORD: ${{ secrets.GOLD_KEY_PASSWORD }}
         run: ./gradlew :app:runCheckstyle :app:assembleContinuous --stacktrace
+
+      - name: Verify APK signature
+        run: |
+          APK=$(find app/build/outputs/apk/continuous -maxdepth 1 -name '*.apk' -print -quit)
+          if [ -z "$APK" ]; then exit 1; fi
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -name apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --verbose "$APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v7

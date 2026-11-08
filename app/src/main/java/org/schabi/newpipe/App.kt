@@ -33,6 +33,7 @@ import org.schabi.newpipe.extractor.downloader.Downloader
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor
 import org.schabi.newpipe.ktx.hasAssignableCause
 import org.schabi.newpipe.settings.NewPipeSettings
+import org.schabi.newpipe.util.InfoCache
 import org.schabi.newpipe.util.BridgeStateSaverInitializer
 import org.schabi.newpipe.util.EnergySaver
 import org.schabi.newpipe.util.Localization
@@ -138,6 +139,18 @@ open class App :
         .components {
             add(OkHttpNetworkFetcherFactory(callFactory = DownloaderImpl.getInstance().client))
         }.build()
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level >= TRIM_MEMORY_RUNNING_LOW) {
+            InfoCache.getInstance().trimCache()
+        }
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        InfoCache.getInstance().clearCache()
+    }
 
     protected open fun getDownloader(): Downloader {
         val downloader = DownloaderImpl.init(null)

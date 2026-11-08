@@ -253,6 +253,10 @@
 
     <!-- THEMES -->
     <string name="energy_saver_key">gold_energy_saver</string>
+    <string name="gold_mobile_data_saver_key">gold_mobile_data_saver</string>
+    <string name="gold_low_battery_audio_key">gold_low_battery_audio</string>
+    <string name="gold_compact_cards_key">gold_compact_cards</string>
+    <string name="gold_remember_tab_key">gold_remember_last_tab</string>
     <string name="sleep_timer_key">gold_sleep_timer_minutes</string>
     <string-array name="sleep_timer_values">
         <item>0</item>

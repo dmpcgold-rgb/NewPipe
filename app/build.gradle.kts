@@ -57,6 +57,17 @@ configure<ApplicationExtension> {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Stable update signing: the keystore stays in GitHub Actions secrets, never in git.
+    val goldStoreFile = System.getenv("GOLD_SIGNING_STORE_FILE")
+    if (!goldStoreFile.isNullOrBlank()) {
+        signingConfigs.create("goldRelease") {
+            storeFile = file(goldStoreFile)
+            storePassword = System.getenv("GOLD_SIGNING_STORE_PASSWORD")
+            keyAlias = System.getenv("GOLD_SIGNING_KEY_ALIAS")
+            keyPassword = System.getenv("GOLD_SIGNING_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         debug {
             isDebuggable = true
@@ -86,7 +97,8 @@ configure<ApplicationExtension> {
 
         register("continuous") {
             initWith(getByName("release"))
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("goldRelease")
+                ?: signingConfigs.getByName("debug")
             isDefault = true
 
             // suffix the app id and the app name with git branch name

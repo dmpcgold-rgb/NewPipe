@@ -36,6 +36,7 @@ import org.schabi.newpipe.settings.NewPipeSettings;
 import org.schabi.newpipe.streams.io.StoredDirectoryHelper;
 import org.schabi.newpipe.streams.io.StoredFileHelper;
 import org.schabi.newpipe.util.EnergySaver;
+import org.schabi.newpipe.util.GoldPowerPolicy;
 import org.schabi.newpipe.util.ExtractorHelper;
 import org.schabi.newpipe.util.FilenameUtils;
 import org.schabi.newpipe.util.ListHelper;
@@ -315,6 +316,10 @@ public final class BatchDownloadStarter implements ServiceConnection {
             if (item.wifiOnly && !isWifiAvailable(appContext)) {
                 return "Wi-Fi not connected";
             }
+            final long freeBytes = directory.getFreeStorageSpace();
+            if (freeBytes >= 0 && freeBytes < 128L * 1024L * 1024L) {
+                return appContext.getString(R.string.gold_storage_low);
+            }
             if (item.wifiOnly) {
                 // The underlying download manager applies metered network rules globally.
                 // The option explicitly warns that this affects other downloads, too.
@@ -340,10 +345,13 @@ public final class BatchDownloadStarter implements ServiceConnection {
             if (file == null || !file.canWrite()) {
                 return "Cannot create download file";
             }
-            final int threads = PreferenceManager.getDefaultSharedPreferences(appContext)
-                    .getInt(appContext.getString(R.string.default_download_threads), 3);
+            final int configuredThreads =
+                    PreferenceManager.getDefaultSharedPreferences(appContext)
+                            .getInt(appContext.getString(R.string.default_download_threads), 3);
+            final int threads = GoldPowerPolicy.recommendedDownloadThreads(
+                    appContext, configuredThreads);
             DownloadManagerService.startMission(appContext, spec.urls, file, spec.kind,
-                    Math.max(1, threads), info, spec.postprocessing, null, 0,
+                    threads, info, spec.postprocessing, null, 0,
                     spec.recovery);
             return null;
         } catch (final Exception exception) {
