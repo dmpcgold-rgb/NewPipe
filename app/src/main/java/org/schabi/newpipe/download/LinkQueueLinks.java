@@ -104,6 +104,43 @@ public final class LinkQueueLinks {
         }
     }
 
+    /**
+     * Checks whether the URL points to a supported episode listing domain.
+     *
+     * @param value candidate URL
+     * @return whether the host belongs to the episode site
+     */
+    public static boolean isEpisodeSiteUrl(final String value) {
+        if (value == null || !isSafeHttps(value)) {
+            return false;
+        }
+        try {
+            final String host = new URI(value).getHost().toLowerCase(Locale.ROOT);
+            return host.equals("serienstream.to")
+                    || host.equals("www.serienstream.to")
+                    || host.equals("s.to") || host.equals("www.s.to");
+        } catch (final URISyntaxException ex) {
+            return false;
+        }
+    }
+
+    /**
+     * Accepts a real episode page instead of mistaking other sites for episodes.
+     *
+     * @param value candidate episode URL
+     * @return whether the URL represents an episode
+     */
+    public static boolean isEpisodePage(final String value) {
+        if (!isEpisodeSiteUrl(value)) {
+            return false;
+        }
+        try {
+            return EPISODE.matcher(new URI(value).getPath()).matches();
+        } catch (final URISyntaxException ex) {
+            return false;
+        }
+    }
+
     public static String describe(final String value) {
         if (!isSafeHttps(value)) {
             return "Ungültiger Link";
