@@ -5,6 +5,7 @@ package org.schabi.newpipe.download;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -61,6 +62,29 @@ public final class BatchDownloadStore {
 
         @NonNull
         String key() {
+            if (serviceId == 0) {
+                try {
+                    final Uri parsed = Uri.parse(url);
+                    final String host = parsed.getHost();
+                    if (host != null && (host.equals("youtube.com")
+                            || host.endsWith(".youtube.com") || host.equals("youtu.be"))) {
+                        String videoId = parsed.getQueryParameter("v");
+                        if (videoId == null && host.equals("youtu.be")) {
+                            videoId = parsed.getLastPathSegment();
+                        }
+                        if (videoId == null && parsed.getPathSegments().size() >= 2
+                                && ("shorts".equals(parsed.getPathSegments().get(0))
+                                || "live".equals(parsed.getPathSegments().get(0)))) {
+                            videoId = parsed.getPathSegments().get(1);
+                        }
+                        if (videoId != null && !videoId.isBlank()) {
+                            return serviceId + ":video:" + videoId + ":" + audioOnly;
+                        }
+                    }
+                } catch (final IllegalArgumentException ignored) {
+                    // Invalid links are still deduplicated by their literal URL.
+                }
+            }
             return serviceId + ":" + url + ":" + audioOnly;
         }
 

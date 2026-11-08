@@ -38,6 +38,21 @@ public class BatchDownloadStoreTest {
     }
 
     @Test
+    public void differentYoutubeUrlsWithSameIdAreDuplicates() {
+        final BatchDownloadStore.Entry longUrl = new BatchDownloadStore.Entry();
+        longUrl.serviceId = 0;
+        longUrl.url = "https://www.youtube.com/watch?v=abc123&t=20";
+        longUrl.audioOnly = false;
+
+        final BatchDownloadStore.Entry shortUrl = new BatchDownloadStore.Entry();
+        shortUrl.serviceId = 0;
+        shortUrl.url = "https://youtu.be/abc123";
+        shortUrl.audioOnly = false;
+
+        assertEquals(longUrl.key(), shortUrl.key());
+    }
+
+    @Test
     public void videoAndAudioAreDistinctQueueEntries() {
         final BatchDownloadStore.Entry video = new BatchDownloadStore.Entry();
         video.serviceId = 0;
