@@ -169,6 +169,10 @@
             android:name=".download.LinkQueueActivity"
             android:exported="false"
             android:label="Link-Sammlung" />
+        <activity
+            android:name=".download.VoeBrowserActivity"
+            android:exported="false"
+            android:label="VOE • Download" />
 
         <activity
             android:name=".RouterActivity"
