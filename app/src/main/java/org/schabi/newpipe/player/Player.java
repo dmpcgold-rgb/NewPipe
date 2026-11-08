@@ -55,7 +55,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
-import android.media.audiofx.DynamicsProcessing;
+import android.media.audiofx.AudioEffect;
 import android.os.Build;
 import android.os.SystemClock;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -250,7 +250,7 @@ public final class Player implements PlaybackListener, Listener {
     private int goldNetworkRetries;
     private long goldNetworkRetryWindow;
     @Nullable
-    private DynamicsProcessing goldDynamicsProcessor;
+    private AudioEffect goldDynamicsProcessor;
 
     /*//////////////////////////////////////////////////////////////////////////
     // UIs, listeners and disposables
@@ -1529,8 +1529,7 @@ public final class Player implements PlaybackListener, Listener {
         }
         try {
             // Android's own optional compressor and limiter for the active playback session.
-            goldDynamicsProcessor = new DynamicsProcessing(0, audioSessionId, null);
-            goldDynamicsProcessor.setEnabled(true);
+            goldDynamicsProcessor = GoldAudioDynamics.create(audioSessionId);
         } catch (final RuntimeException exception) {
             Log.w(TAG, "Android audio compression unavailable on this device", exception);
             if (goldDynamicsProcessor != null) {

@@ -27,8 +27,10 @@ public final class GoldDiagnostics {
     public static String report(@NonNull final Context context) {
         final ConnectivityManager connectivity =
                 ContextCompat.getSystemService(context, ConnectivityManager.class);
-        final NetworkCapabilities capability = connectivity == null ? null
-                : connectivity.getNetworkCapabilities(connectivity.getActiveNetwork());
+        final android.net.Network activeNetwork = connectivity == null ? null
+                : connectivity.getActiveNetwork();
+        final NetworkCapabilities capability = activeNetwork == null ? null
+                : connectivity.getNetworkCapabilities(activeNetwork);
         final boolean connected = capability != null
                 && capability.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
         final ActivityManager activity =
