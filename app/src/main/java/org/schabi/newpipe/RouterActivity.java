@@ -49,6 +49,8 @@ import org.schabi.newpipe.databinding.ListRadioIconItemBinding;
 import org.schabi.newpipe.databinding.SingleChoiceDialogViewBinding;
 import org.schabi.newpipe.download.DownloadDialog;
 import org.schabi.newpipe.download.LinkQueueActivity;
+import org.schabi.newpipe.download.LinkQueueLinks;
+import org.schabi.newpipe.download.VoeBrowserActivity;
 import org.schabi.newpipe.download.LoadingDialog;
 import org.schabi.newpipe.error.ErrorInfo;
 import org.schabi.newpipe.error.ErrorUtil;
@@ -291,9 +293,17 @@ public class RouterActivity extends AppCompatActivity {
                         (dialog, which) -> ShareUtils.openUrlInBrowser(this, url))
                 .setNegativeButton(R.string.share,
                         (dialog, which) -> ShareUtils.shareText(this, "", url)) // no subject
-                .setNeutralButton("Zur Link-Sammlung", (dialog, which) ->
-                        startActivity(new Intent(this, LinkQueueActivity.class)
-                                .putExtra(LinkQueueActivity.EXTRA_URL, url)))
+                .setNeutralButton(LinkQueueLinks.isVoeUrl(url)
+                                ? "VOE öffnen / Download" : "Zur Link-Sammlung",
+                        (dialog, which) -> {
+                            if (LinkQueueLinks.isVoeUrl(url)) {
+                                startActivity(new Intent(this, VoeBrowserActivity.class)
+                                        .putExtra(VoeBrowserActivity.EXTRA_VOE_URL, url));
+                            } else {
+                                startActivity(new Intent(this, LinkQueueActivity.class)
+                                        .putExtra(LinkQueueActivity.EXTRA_URL, url));
+                            }
+                        })
                 .setOnDismissListener(dialog -> finish())
                 .show();
     }
