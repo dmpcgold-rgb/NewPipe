@@ -241,8 +241,8 @@ public final class BatchDownloadStarter implements ServiceConnection {
 
     private void queueAll() {
         fetchSubscription = Completable.fromAction(() -> {
-            for (final BatchDownloadStore.Entry item :
-                    BatchDownloadStore.snapshot(appContext)) {
+            for (final BatchDownloadStore.Entry item
+                    : BatchDownloadStore.snapshot(appContext)) {
                 if (finished) {
                     break;
                 }
@@ -396,6 +396,10 @@ public final class BatchDownloadStarter implements ServiceConnection {
     /**
      * Match real source codecs. MP3 is only available if the website offers an MP3 stream;
      * renaming AAC/Opus data to .mp3 would produce an invalid file.
+     *
+     * @param format actual codec/format of the source audio stream
+     * @param selection requested batch audio format
+     * @return true only when the existing stream can be saved in the selected format
      */
     static boolean matchesAudioFormat(@Nullable final MediaFormat format,
                                       @Nullable final String selection) {
