@@ -953,6 +953,14 @@ public final class MainPlayerUi extends VideoPlayerUi implements View.OnLayoutCh
             binding.playbackControlRoot.setPadding(0, 0, 0, 0);
         }
         fragmentListener.onFullscreenStateChanged(isFullscreen);
+        // Restore the controls after Android has laid out the new viewport and insets.
+        if (isFullscreen) {
+            binding.getRoot().post(() -> {
+                if (isFullscreen) {
+                    showControlsThenHide();
+                }
+            });
+        }
 
         binding.metadataView.setVisibility(isFullscreen ? View.VISIBLE : View.GONE);
         binding.playerCloseButton.setVisibility(isFullscreen ? View.GONE : View.VISIBLE);

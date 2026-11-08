@@ -925,4 +925,6 @@
     <string name="gold_audio_speed_title">Audiogeschwindigkeit</string>
     <string-array name="gold_video_title_size_labels"><item>14 sp</item><item>15 sp</item><item>17 sp</item><item>19 sp</item></string-array>
     <string-array name="gold_skip_seconds_labels"><item>0 Sekunden</item><item>5 Sekunden</item><item>10 Sekunden</item><item>15 Sekunden</item><item>20 Sekunden</item><item>30 Sekunden</item></string-array>
+    <string name="gold_audio_dynamics_title">Lautstärkespitzen ausgleichen (Android 9+)</string>
+    <string name="gold_audio_dynamics_summary">Optionale Audio-Kompression von Android reduziert starke Lautstärkesprünge. Die Wirkung hängt vom Gerät ab, ist keine vollständige Titel-Normalisierung und kann den Klang verändern.</string>
 </resources>

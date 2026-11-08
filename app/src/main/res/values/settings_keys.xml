@@ -257,6 +257,7 @@
     <string name="gold_stable_list_animation_key">gold_stable_list_animation</string>
     <string name="gold_diagnostics_key">gold_device_diagnostics</string>
     <string name="gold_auto_skip_key">gold_auto_skip</string>
+    <string name="gold_audio_dynamics_key">gold_audio_dynamics</string>
     <string name="gold_intro_seconds_key">gold_intro_seconds</string>
     <string name="gold_outro_seconds_key">gold_outro_seconds</string>
     <string name="gold_speed_by_type_key">gold_speed_by_type</string>

@@ -1006,4 +1006,6 @@
     <string-array name="gold_skip_seconds_values"><item>0</item><item>5</item><item>10</item><item>15</item><item>20</item><item>30</item></string-array>
     <string-array name="gold_speed_labels"><item>0.75×</item><item>1.0×</item><item>1.25×</item><item>1.5×</item><item>1.75×</item><item>2.0×</item></string-array>
     <string-array name="gold_speed_values"><item>0.75</item><item>1.0</item><item>1.25</item><item>1.5</item><item>1.75</item><item>2.0</item></string-array>
+    <string name="gold_audio_dynamics_title">Reduce loudness peaks (Android 9+)</string>
+    <string name="gold_audio_dynamics_summary">Optional Android audio compression reduces sharp volume changes. Availability varies by device; this is not full per-track loudness normalization and may change the sound.</string>
 </resources>
