@@ -899,4 +899,8 @@
     <string name="gold_storage_low">Zu wenig freier Speicher (mindestens 128 MB freihalten).</string>
     <string name="gold_wifi_max_quality_title">Bei WLAN höchste Videoqualität</string>
     <string name="gold_wifi_max_quality_summary">Auch im Energiesparmodus über WLAN automatisch die höchste abspielbare Auflösung verwenden, wenn verfügbar auch über 1080p. Bei mobilen Daten bleibt die Begrenzung. Gilt für neue Videos und automatische Video-Sammeldownloads; manuelle Qualitätswahl hat Vorrang.</string>
+    <string name="gold_music_prefix_title">Text vor alle Musiktitel setzen (optional)</string>
+    <string name="gold_music_prefix_hint">Beispiel: A - oder 2026 -</string>
+    <string name="gold_music_prefix_summary">Der ursprüngliche Musiktitel bleibt unverändert. Buchstaben oder Zahlen werden nur vor die ausgewählten Dateinamen gesetzt; unzulässige Dateizeichen werden ersetzt.</string>
+    <string name="gold_music_prefix_numbered">Titel fortlaufend nummerieren (01, 02, 03…)</string>
 </resources>

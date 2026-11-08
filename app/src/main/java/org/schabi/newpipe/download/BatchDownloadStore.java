@@ -19,6 +19,7 @@ import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -61,6 +62,7 @@ public final class BatchDownloadStore {
         public String quality;
         public String audioTrack;
         public String audioFormat = FORMAT_AUTO;
+        public String filenamePrefix = "";
         public String status;
         public String error;
 
@@ -107,6 +109,7 @@ public final class BatchDownloadStore {
             j.put("quality", quality);
             j.put("track", audioTrack);
             j.put("audio_format", audioFormat);
+            j.put("filename_prefix", filenamePrefix);
             j.put("status", status);
             j.put("error", error);
             return j;
@@ -122,6 +125,7 @@ public final class BatchDownloadStore {
             e.quality = j.optString("quality", "");
             e.audioTrack = j.optString("track", AUDIO_AUTO);
             e.audioFormat = j.optString("audio_format", FORMAT_AUTO);
+            e.filenamePrefix = j.optString("filename_prefix", "");
             e.status = j.optString("status", PENDING);
             e.error = j.optString("error", "");
             return e;
@@ -134,15 +138,26 @@ public final class BatchDownloadStore {
         public final String quality;
         public final String track;
         public final String audioFormat;
+        public final String filenamePrefix;
+        public final boolean numberMusicTitles;
         public final boolean wifiOnly;
 
         public Options(final boolean audioOnly, @NonNull final String quality,
                        @NonNull final String track, @NonNull final String audioFormat,
                        final boolean wifiOnly) {
+            this(audioOnly, quality, track, audioFormat, "", false, wifiOnly);
+        }
+
+        public Options(final boolean audioOnly, @NonNull final String quality,
+                       @NonNull final String track, @NonNull final String audioFormat,
+                       @NonNull final String filenamePrefix, final boolean numberMusicTitles,
+                       final boolean wifiOnly) {
             this.audioOnly = audioOnly;
             this.quality = quality;
             this.track = track;
             this.audioFormat = audioFormat;
+            this.filenamePrefix = filenamePrefix;
+            this.numberMusicTitles = numberMusicTitles;
             this.wifiOnly = wifiOnly;
         }
     }
@@ -211,6 +226,7 @@ public final class BatchDownloadStore {
         synchronized (LOCK) {
             final List<Entry> existing = load(context);
             int added = 0;
+            int sequence = 1;
             for (final StreamInfoItem item : items) {
                 final Entry entry = new Entry();
                 entry.serviceId = item.getServiceId();
@@ -220,6 +236,10 @@ public final class BatchDownloadStore {
                 entry.quality = options.quality;
                 entry.audioTrack = options.track;
                 entry.audioFormat = options.audioFormat;
+                entry.filenamePrefix = options.audioOnly
+                        ? options.filenamePrefix + (options.numberMusicTitles
+                        ? String.format(Locale.ROOT, "%02d ", sequence) : "") : "";
+                sequence++;
                 entry.wifiOnly = options.wifiOnly;
                 entry.status = PENDING;
                 entry.error = "";

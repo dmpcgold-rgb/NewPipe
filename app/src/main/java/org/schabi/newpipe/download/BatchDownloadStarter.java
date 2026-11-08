@@ -327,12 +327,21 @@ public final class BatchDownloadStarter implements ServiceConnection {
                         .putBoolean(appContext.getString(R.string.downloads_cross_network), false)
                         .apply();
             }
-            final String cleanTitle = FilenameUtils.createFilename(appContext, info.getName());
-            final String shortened = cleanTitle.length() > 110
-                    ? cleanTitle.substring(0, 110) : cleanTitle;
-            final String base = shortened.isBlank() ? "video" : shortened;
-            final String name = base + "_" + item.serviceId + "_"
-                    + Integer.toHexString(info.getUrl().hashCode()) + "." + spec.extension;
+            final String name;
+            if (item.audioOnly) {
+                // Music filenames keep the video title unchanged except for unsafe file chars.
+                // No automatic hash, suffix or title rewrite; optional text is prepended only.
+                name = BatchFilenameHelper.audioFilename(
+                        item.filenamePrefix, info.getName(), spec.extension);
+            } else {
+                final String cleanTitle = FilenameUtils.createFilename(
+                        appContext, info.getName());
+                final String shortened = cleanTitle.length() > 110
+                        ? cleanTitle.substring(0, 110) : cleanTitle;
+                final String base = shortened.isBlank() ? "video" : shortened;
+                name = base + "_" + item.serviceId + "_"
+                        + Integer.toHexString(info.getUrl().hashCode()) + "." + spec.extension;
+            }
             if (directory.findFile(name) != null) {
                 return "File already exists";
             }

@@ -976,4 +976,8 @@
     <string name="gold_storage_low">Not enough free storage (keep at least 128 MB available).</string>
     <string name="gold_wifi_max_quality_title">Highest video quality on Wi-Fi</string>
     <string name="gold_wifi_max_quality_summary">When energy saving is on, prefer the highest playable resolution on Wi-Fi, including above 1080p when available. On mobile data, the energy-saving limit remains. Applies to new video playback and automatic batch video downloads; manual quality choices take priority.</string>
+    <string name="gold_music_prefix_title">Text before all music titles (optional)</string>
+    <string name="gold_music_prefix_hint">Example: A - or 2026 -</string>
+    <string name="gold_music_prefix_summary">The original song title stays unchanged. Your letters or numbers are added before each selected filename; unsafe filename characters are replaced.</string>
+    <string name="gold_music_prefix_numbered">Number tracks automatically (01, 02, 03…)</string>
 </resources>

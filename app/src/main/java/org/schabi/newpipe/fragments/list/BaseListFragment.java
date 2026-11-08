@@ -12,6 +12,8 @@ import android.util.Log;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -677,6 +679,25 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         final TextView formatHint = new TextView(context);
         formatHint.setText(R.string.gold_batch_audio_format_note);
         form.addView(formatHint);
+
+        final LinearLayout prefixGroup = new LinearLayout(context);
+        prefixGroup.setOrientation(LinearLayout.VERTICAL);
+        final TextView prefixLabel = new TextView(context);
+        prefixLabel.setText(R.string.gold_music_prefix_title);
+        prefixGroup.addView(prefixLabel);
+        final EditText musicPrefix = new EditText(context);
+        musicPrefix.setSingleLine(true);
+        musicPrefix.setHint(R.string.gold_music_prefix_hint);
+        musicPrefix.setContentDescription(getString(R.string.gold_music_prefix_title));
+        prefixGroup.addView(musicPrefix);
+        final TextView prefixNote = new TextView(context);
+        prefixNote.setText(R.string.gold_music_prefix_summary);
+        prefixGroup.addView(prefixNote);
+        final CheckBox musicNumbering = new CheckBox(context);
+        musicNumbering.setText(R.string.gold_music_prefix_numbered);
+        prefixGroup.addView(musicNumbering);
+        form.addView(prefixGroup);
+
         final Spinner track = goldSpinner(form, R.string.gold_batch_select_track,
                 new String[]{getString(R.string.gold_batch_track_auto),
                         getString(R.string.gold_batch_track_german_original),
@@ -690,6 +711,7 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                         final boolean audio = type.getSelectedItemPosition() == 1;
                         ((View) format.getTag()).setVisibility(audio ? View.VISIBLE : View.GONE);
                         formatHint.setVisibility(audio ? View.VISIBLE : View.GONE);
+                        prefixGroup.setVisibility(audio ? View.VISIBLE : View.GONE);
                         ((View) quality.getTag()).setVisibility(audio ? View.GONE : View.VISIBLE);
                     }
 
@@ -699,14 +721,17 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         type.setOnItemSelectedListener(formatVisibility);
         ((View) format.getTag()).setVisibility(View.GONE);
         formatHint.setVisibility(View.GONE);
+        prefixGroup.setVisibility(View.GONE);
         final CheckBox wifiOnly = new CheckBox(context);
         wifiOnly.setText(R.string.gold_batch_wifi_only);
         wifiOnly.setChecked(true);
         form.addView(wifiOnly);
 
+        final ScrollView scroll = new ScrollView(context);
+        scroll.addView(form);
         new AlertDialog.Builder(context)
                 .setTitle(getString(R.string.gold_multi_download_count, selected.size()))
-                .setView(form)
+                .setView(scroll)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.download, (dialog, which) -> {
                     if (!PermissionHelper.checkStoragePermissions(requireActivity(),
@@ -732,6 +757,7 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                                     qualities[quality.getSelectedItemPosition()],
                                     audioTracks[track.getSelectedItemPosition()],
                                     formats[format.getSelectedItemPosition()],
+                                    musicPrefix.getText().toString(), musicNumbering.isChecked(),
                                     wifiOnly.isChecked());
                     BatchDownloadStarter.start(context, selected, options);
                     infoListAdapter.clearStreamSelection();

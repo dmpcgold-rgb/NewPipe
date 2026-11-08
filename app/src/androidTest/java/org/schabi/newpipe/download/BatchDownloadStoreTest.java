@@ -24,6 +24,7 @@ public class BatchDownloadStoreTest {
         entry.quality = "720p";
         entry.audioTrack = BatchDownloadStore.AUDIO_ORIGINAL;
         entry.audioFormat = BatchDownloadStore.FORMAT_M4A;
+        entry.filenamePrefix = "A - 01 ";
         entry.status = BatchDownloadStore.PENDING;
         entry.error = "";
 
@@ -35,6 +36,7 @@ public class BatchDownloadStoreTest {
         assertEquals("720p", restored.quality);
         assertEquals(BatchDownloadStore.AUDIO_ORIGINAL, restored.audioTrack);
         assertEquals(BatchDownloadStore.FORMAT_M4A, restored.audioFormat);
+        assertEquals("A - 01 ", restored.filenamePrefix);
         assertEquals(BatchDownloadStore.PENDING, restored.status);
         assertTrue(restored.wifiOnly);
         assertFalse(restored.audioOnly);
@@ -84,6 +86,7 @@ public class BatchDownloadStoreTest {
         }
         final BatchDownloadStore.Entry restored = BatchDownloadStore.Entry.fromJson(original);
         assertEquals(BatchDownloadStore.FORMAT_AUTO, restored.audioFormat);
+        assertEquals("", restored.filenamePrefix);
     }
 
     @Test
