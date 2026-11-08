@@ -81,7 +81,9 @@ public final class ListHelper {
      */
     public static int getDefaultResolutionIndex(final Context context,
                                                 final List<VideoStream> videoStreams) {
-        final String defaultResolution = GoldPowerPolicy.shouldReduceVideoQuality(context)
+        final String defaultResolution = GoldPowerPolicy.shouldUseMaxWifiQuality(context)
+                ? context.getString(R.string.best_resolution_key)
+                : GoldPowerPolicy.shouldReduceVideoQuality(context)
                 ? "360p" : computeDefaultResolution(context,
                         R.string.default_resolution_key, R.string.default_resolution_value);
         return getDefaultResolutionWithDefaultFormat(context, defaultResolution, videoStreams);
@@ -241,7 +243,8 @@ public final class ListHelper {
                 PreferenceManager.getDefaultSharedPreferences(context);
 
         final boolean showHigherResolutions = preferences.getBoolean(
-                context.getString(R.string.show_higher_resolutions_key), false);
+                context.getString(R.string.show_higher_resolutions_key), false)
+                || GoldPowerPolicy.shouldUseMaxWifiQuality(context);
         final MediaFormat defaultFormat = getDefaultFormat(context,
                 R.string.default_video_format_key, R.string.default_video_format_value);
 

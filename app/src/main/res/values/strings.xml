@@ -974,4 +974,6 @@
     <string name="gold_remember_tab_title">Remember home tab</string>
     <string name="gold_remember_tab_summary">Open the last-used home tab on the next launch.</string>
     <string name="gold_storage_low">Not enough free storage (keep at least 128 MB available).</string>
+    <string name="gold_wifi_max_quality_title">Highest video quality on Wi-Fi</string>
+    <string name="gold_wifi_max_quality_summary">When energy saving is on, prefer the highest playable resolution on Wi-Fi, including above 1080p when available. On mobile data, the energy-saving limit remains. Applies to new video playback and automatic batch video downloads; manual quality choices take priority.</string>
 </resources>

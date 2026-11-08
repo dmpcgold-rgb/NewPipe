@@ -442,7 +442,9 @@ public final class BatchDownloadStarter implements ServiceConnection {
             return null;
         }
         final String resolution = item.quality.isBlank()
-                ? (EnergySaver.isEnabled(appContext) ? "480p" : "") : item.quality;
+                ? (GoldPowerPolicy.shouldUseMaxWifiQuality(appContext)
+                ? appContext.getString(R.string.best_resolution_key)
+                : EnergySaver.isEnabled(appContext) ? "480p" : "") : item.quality;
         final int index = resolution.isBlank()
                 ? ListHelper.getDefaultResolutionIndex(appContext, streams)
                 : ListHelper.getResolutionIndex(appContext, streams, resolution);

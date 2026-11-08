@@ -13,6 +13,14 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
+        android:key="@string/gold_wifi_max_quality_key"
+        android:title="@string/gold_wifi_max_quality_title"
+        android:summary="@string/gold_wifi_max_quality_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
         android:key="@string/gold_compact_cards_key"
         android:title="@string/gold_compact_cards_title"
         android:summary="@string/gold_compact_cards_summary"

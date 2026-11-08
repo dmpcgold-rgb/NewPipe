@@ -335,6 +335,10 @@ public final class Player implements PlaybackListener, Listener {
             public int getDefaultResolutionIndex(final List<VideoStream> sortedVideos) {
                 // Select a modest default stream in energy-saving mode; manual quality selection
                 // continues to use getOverrideResolutionIndex below and is never blocked.
+                if (GoldPowerPolicy.shouldUseMaxWifiQuality(context)) {
+                    return getResolutionIndex(context, sortedVideos,
+                            context.getString(R.string.best_resolution_key));
+                }
                 if (EnergySaver.isEnabled(context)) {
                     final String preferredResolution = videoPlayerSelected() ? "480p" : "360p";
                     return getResolutionIndex(context, sortedVideos, preferredResolution);
