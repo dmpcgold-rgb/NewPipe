@@ -44,6 +44,15 @@ public class LinkQueueLinksTest {
     }
 
     @Test
+    public void allowsOnlyOfficialVoeHosts() {
+        assertTrue(LinkQueueLinks.isVoeUrl("https://voe.sx/e/123456789abc"));
+        assertTrue(LinkQueueLinks.isVoeUrl("https://www.voe.sx/123456789abc"));
+        assertFalse(LinkQueueLinks.isVoeUrl("http://voe.sx/123456789abc"));
+        assertFalse(LinkQueueLinks.isVoeUrl("https://voe.sx.attacker.com/movie"));
+        assertFalse(LinkQueueLinks.isVoeUrl("https://fakevoe.sx/episode"));
+    }
+
+    @Test
     public void rejectsInsecureAndLocalAddresses() {
         assertFalse(LinkQueueLinks.isSafeHttps("http://example.org/video.mp4"));
         assertFalse(LinkQueueLinks.isSafeHttps("https://localhost/video.mp4"));
