@@ -957,4 +957,12 @@
     <string name="gold_batch_no_wifi">Waiting for Wi-Fi; pending items are saved.</string>
     <string name="gold_batch_retry_notice">Failed downloads are selected for retry.</string>
     <string name="gold_batch_storage_notice">Saved queue can resume after you reopen NewPipe Gold.</string>
+    <string name="gold_batch_select_audio_format">Audio format</string>
+    <string name="gold_batch_audio_format_auto">Automatic (best available)</string>
+    <string name="gold_batch_audio_format_mp3">MP3 (only if provided by source)</string>
+    <string name="gold_batch_audio_format_m4a">M4A / AAC</string>
+    <string name="gold_batch_audio_format_opus">Opus (.opus)</string>
+    <string name="gold_batch_audio_format_webm">WebM audio (.webm)</string>
+    <string name="gold_batch_audio_format_note">YouTube normally offers M4A or Opus, not MP3. MP3 conversion is not included. Unavailable formats appear in the error list.</string>
+    <string name="gold_batch_format_not_offered">%1$s not offered by video source (conversion required)</string>
 </resources>

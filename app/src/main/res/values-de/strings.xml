@@ -880,4 +880,12 @@
     <string name="gold_batch_no_wifi">Warte auf WLAN; offene Aufträge sind gespeichert.</string>
     <string name="gold_batch_retry_notice">Fehlgeschlagene Downloads werden erneut versucht.</string>
     <string name="gold_batch_storage_notice">Gespeicherte Aufträge werden beim nächsten Öffnen fortgesetzt.</string>
+    <string name="gold_batch_select_audio_format">Audioformat</string>
+    <string name="gold_batch_audio_format_auto">Automatisch (bestes verfügbares)</string>
+    <string name="gold_batch_audio_format_mp3">MP3 (nur wenn von Quelle angeboten)</string>
+    <string name="gold_batch_audio_format_m4a">M4A / AAC</string>
+    <string name="gold_batch_audio_format_opus">Opus (.opus)</string>
+    <string name="gold_batch_audio_format_webm">WebM-Audio (.webm)</string>
+    <string name="gold_batch_audio_format_note">YouTube bietet normalerweise M4A oder Opus, aber kein MP3. Eine MP3-Umwandlung ist noch nicht integriert. Nicht verfügbare Formate erscheinen in der Fehlerliste.</string>
+    <string name="gold_batch_format_not_offered">%1$s von Videoquelle nicht angeboten (Umwandlung erforderlich)</string>
 </resources>

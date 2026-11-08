@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
@@ -636,13 +637,17 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         final TextView label = new TextView(context);
         label.setText(title);
         label.setPadding(0, 12, 0, 2);
-        form.addView(label);
+        final LinearLayout group = new LinearLayout(context);
+        group.setOrientation(LinearLayout.VERTICAL);
+        group.addView(label);
         final Spinner spinner = new Spinner(context);
         final ArrayAdapter<String> adapter = new ArrayAdapter<>(context,
                 android.R.layout.simple_spinner_item, options);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-        form.addView(spinner);
+        group.addView(spinner);
+        form.addView(group);
+        spinner.setTag(group);
         return spinner;
     }
 
@@ -663,11 +668,37 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         final Spinner quality = goldSpinner(form, R.string.gold_batch_select_quality,
                 new String[]{getString(R.string.gold_batch_quality_auto),
                         "360p", "480p", "720p", "1080p"});
+        final Spinner format = goldSpinner(form, R.string.gold_batch_select_audio_format,
+                new String[]{getString(R.string.gold_batch_audio_format_auto),
+                        getString(R.string.gold_batch_audio_format_mp3),
+                        getString(R.string.gold_batch_audio_format_m4a),
+                        getString(R.string.gold_batch_audio_format_opus),
+                        getString(R.string.gold_batch_audio_format_webm)});
+        final TextView formatHint = new TextView(context);
+        formatHint.setText(R.string.gold_batch_audio_format_note);
+        form.addView(formatHint);
         final Spinner track = goldSpinner(form, R.string.gold_batch_select_track,
                 new String[]{getString(R.string.gold_batch_track_auto),
                         getString(R.string.gold_batch_track_german_original),
                         getString(R.string.gold_batch_track_german_dubbed),
                         getString(R.string.gold_batch_track_video_audio)});
+        final AdapterView.OnItemSelectedListener formatVisibility =
+                new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(final AdapterView<?> parent, final View view,
+                                               final int position, final long id) {
+                        final boolean audio = type.getSelectedItemPosition() == 1;
+                        ((View) format.getTag()).setVisibility(audio ? View.VISIBLE : View.GONE);
+                        formatHint.setVisibility(audio ? View.VISIBLE : View.GONE);
+                        ((View) quality.getTag()).setVisibility(audio ? View.GONE : View.VISIBLE);
+                    }
+
+                    @Override
+                    public void onNothingSelected(final AdapterView<?> parent) { }
+                };
+        type.setOnItemSelectedListener(formatVisibility);
+        ((View) format.getTag()).setVisibility(View.GONE);
+        formatHint.setVisibility(View.GONE);
         final CheckBox wifiOnly = new CheckBox(context);
         wifiOnly.setText(R.string.gold_batch_wifi_only);
         wifiOnly.setChecked(true);
@@ -689,10 +720,18 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                             BatchDownloadStore.AUDIO_DUBBED,
                             BatchDownloadStore.AUDIO_EMBEDDED
                     };
+                    final String[] formats = {
+                            BatchDownloadStore.FORMAT_AUTO,
+                            BatchDownloadStore.FORMAT_MP3,
+                            BatchDownloadStore.FORMAT_M4A,
+                            BatchDownloadStore.FORMAT_OPUS,
+                            BatchDownloadStore.FORMAT_WEBM
+                    };
                     final BatchDownloadStore.Options options =
                             new BatchDownloadStore.Options(type.getSelectedItemPosition() == 1,
                                     qualities[quality.getSelectedItemPosition()],
                                     audioTracks[track.getSelectedItemPosition()],
+                                    formats[format.getSelectedItemPosition()],
                                     wifiOnly.isChecked());
                     BatchDownloadStarter.start(context, selected, options);
                     infoListAdapter.clearStreamSelection();

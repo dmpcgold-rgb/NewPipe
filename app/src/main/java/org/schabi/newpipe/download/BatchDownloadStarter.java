@@ -300,6 +300,10 @@ public final class BatchDownloadStarter implements ServiceConnection {
                     item.audioOnly ? audioStorage : videoStorage;
             final DownloadManager downloads = manager;
             if (spec == null) {
+                if (item.audioOnly && !BatchDownloadStore.FORMAT_AUTO.equals(item.audioFormat)) {
+                    return appContext.getString(R.string.gold_batch_format_not_offered,
+                            item.audioFormat.toUpperCase(Locale.ROOT));
+                }
                 return "No compatible audio/video stream";
             }
             if (directory == null
@@ -355,7 +359,13 @@ public final class BatchDownloadStarter implements ServiceConnection {
         if (streams.isEmpty()) {
             return null;
         }
-        final AudioStream chosen = selectAudioStream(streams, item.audioTrack);
+        final List<AudioStream> preferredFormats = new ArrayList<>();
+        for (final AudioStream stream : streams) {
+            if (matchesAudioFormat(stream.getFormat(), item.audioFormat)) {
+                preferredFormats.add(stream);
+            }
+        }
+        final AudioStream chosen = selectAudioStream(preferredFormats, item.audioTrack);
         if (chosen == null) {
             return null;
         }
@@ -367,7 +377,8 @@ public final class BatchDownloadStarter implements ServiceConnection {
         final String postprocessing;
         final String extension;
         final String mime;
-        if (format == MediaFormat.WEBMA_OPUS) {
+        if (format == MediaFormat.WEBMA_OPUS
+                && !BatchDownloadStore.FORMAT_WEBM.equals(item.audioFormat)) {
             extension = "opus";
             mime = "audio/ogg";
             postprocessing = Postprocessing.ALGORITHM_OGG_FROM_WEBM_DEMUXER;
@@ -380,6 +391,32 @@ public final class BatchDownloadStarter implements ServiceConnection {
         return new DownloadSpec(new String[]{selected.getContent()}, 'a',
                 extension, mime, postprocessing,
                 new ArrayList<>(List.of(new MissionRecoveryInfo(selected))));
+    }
+
+    /**
+     * Match real source codecs. MP3 is only available if the website offers an MP3 stream;
+     * renaming AAC/Opus data to .mp3 would produce an invalid file.
+     */
+    static boolean matchesAudioFormat(@Nullable final MediaFormat format,
+                                      @Nullable final String selection) {
+        if (format == null) {
+            return false;
+        }
+        if (selection == null || BatchDownloadStore.FORMAT_AUTO.equals(selection)) {
+            return true;
+        }
+        switch (selection) {
+            case BatchDownloadStore.FORMAT_MP3:
+                return format == MediaFormat.MP3;
+            case BatchDownloadStore.FORMAT_M4A:
+                return format == MediaFormat.M4A;
+            case BatchDownloadStore.FORMAT_OPUS:
+                return format == MediaFormat.WEBMA_OPUS || format == MediaFormat.OPUS;
+            case BatchDownloadStore.FORMAT_WEBM:
+                return format == MediaFormat.WEBMA || format == MediaFormat.WEBMA_OPUS;
+            default:
+                return false;
+        }
     }
 
     @Nullable

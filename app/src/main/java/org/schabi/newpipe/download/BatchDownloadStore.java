@@ -36,6 +36,11 @@ public final class BatchDownloadStore {
     public static final String AUDIO_ORIGINAL = "de-original";
     public static final String AUDIO_DUBBED = "de-dubbed";
     public static final String AUDIO_EMBEDDED = "video-original";
+    public static final String FORMAT_AUTO = "auto";
+    public static final String FORMAT_MP3 = "mp3";
+    public static final String FORMAT_M4A = "m4a";
+    public static final String FORMAT_OPUS = "opus";
+    public static final String FORMAT_WEBM = "webm";
 
     private static final String PREFERENCES = "newpipe_gold_batch_downloads";
     private static final String DATA_KEY = "batch_items_v1";
@@ -55,6 +60,7 @@ public final class BatchDownloadStore {
         public boolean wifiOnly;
         public String quality;
         public String audioTrack;
+        public String audioFormat = FORMAT_AUTO;
         public String status;
         public String error;
 
@@ -62,6 +68,8 @@ public final class BatchDownloadStore {
 
         @NonNull
         String key() {
+            final String formatIdentity = audioOnly ? ":" + (audioFormat == null
+                    ? FORMAT_AUTO : audioFormat) : "";
             if (serviceId == 0) {
                 try {
                     final Uri parsed = Uri.parse(url);
@@ -78,14 +86,14 @@ public final class BatchDownloadStore {
                             videoId = parsed.getPathSegments().get(1);
                         }
                         if (videoId != null && !videoId.isBlank()) {
-                            return serviceId + ":video:" + videoId + ":" + audioOnly;
+                            return serviceId + ":video:" + videoId + ":" + audioOnly + formatIdentity;
                         }
                     }
                 } catch (final IllegalArgumentException ignored) {
                     // Invalid links are still deduplicated by their literal URL.
                 }
             }
-            return serviceId + ":" + url + ":" + audioOnly;
+            return serviceId + ":" + url + ":" + audioOnly + formatIdentity;
         }
 
         JSONObject toJson() throws JSONException {
@@ -97,6 +105,7 @@ public final class BatchDownloadStore {
             j.put("wifi", wifiOnly);
             j.put("quality", quality);
             j.put("track", audioTrack);
+            j.put("audio_format", audioFormat);
             j.put("status", status);
             j.put("error", error);
             return j;
@@ -111,6 +120,7 @@ public final class BatchDownloadStore {
             e.wifiOnly = j.optBoolean("wifi", true);
             e.quality = j.optString("quality", "");
             e.audioTrack = j.optString("track", AUDIO_AUTO);
+            e.audioFormat = j.optString("audio_format", FORMAT_AUTO);
             e.status = j.optString("status", PENDING);
             e.error = j.optString("error", "");
             return e;
@@ -122,13 +132,16 @@ public final class BatchDownloadStore {
         public final boolean audioOnly;
         public final String quality;
         public final String track;
+        public final String audioFormat;
         public final boolean wifiOnly;
 
         public Options(final boolean audioOnly, @NonNull final String quality,
-                       @NonNull final String track, final boolean wifiOnly) {
+                       @NonNull final String track, @NonNull final String audioFormat,
+                       final boolean wifiOnly) {
             this.audioOnly = audioOnly;
             this.quality = quality;
             this.track = track;
+            this.audioFormat = audioFormat;
             this.wifiOnly = wifiOnly;
         }
     }
@@ -205,6 +218,7 @@ public final class BatchDownloadStore {
                 entry.audioOnly = options.audioOnly;
                 entry.quality = options.quality;
                 entry.audioTrack = options.track;
+                entry.audioFormat = options.audioFormat;
                 entry.wifiOnly = options.wifiOnly;
                 entry.status = PENDING;
                 entry.error = "";

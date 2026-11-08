@@ -22,6 +22,7 @@ public class BatchDownloadStoreTest {
         entry.wifiOnly = true;
         entry.quality = "720p";
         entry.audioTrack = BatchDownloadStore.AUDIO_ORIGINAL;
+        entry.audioFormat = BatchDownloadStore.FORMAT_M4A;
         entry.status = BatchDownloadStore.PENDING;
         entry.error = "";
 
@@ -32,6 +33,7 @@ public class BatchDownloadStoreTest {
         assertEquals("Deutsch (Originalton)", restored.title);
         assertEquals("720p", restored.quality);
         assertEquals(BatchDownloadStore.AUDIO_ORIGINAL, restored.audioTrack);
+        assertEquals(BatchDownloadStore.FORMAT_M4A, restored.audioFormat);
         assertEquals(BatchDownloadStore.PENDING, restored.status);
         assertTrue(restored.wifiOnly);
         assertFalse(restored.audioOnly);
@@ -50,6 +52,37 @@ public class BatchDownloadStoreTest {
         shortUrl.audioOnly = false;
 
         assertEquals(longUrl.key(), shortUrl.key());
+    }
+
+    @Test
+    public void differentAudioFormatsAreDistinctQueueEntries() {
+        final BatchDownloadStore.Entry mp3 = new BatchDownloadStore.Entry();
+        mp3.serviceId = 0;
+        mp3.url = "https://youtu.be/abc123";
+        mp3.audioOnly = true;
+        mp3.audioFormat = BatchDownloadStore.FORMAT_MP3;
+
+        final BatchDownloadStore.Entry m4a = new BatchDownloadStore.Entry();
+        m4a.serviceId = 0;
+        m4a.url = "https://www.youtube.com/watch?v=abc123";
+        m4a.audioOnly = true;
+        m4a.audioFormat = BatchDownloadStore.FORMAT_M4A;
+
+        assertFalse(mp3.key().equals(m4a.key()));
+    }
+
+    @Test
+    public void legacyQueueRecordsUseAutomaticAudioFormat() {
+        final JSONObject original = new JSONObject();
+        try {
+            original.put("service", 0);
+            original.put("url", "https://youtu.be/abc123");
+            original.put("audio", true);
+        } catch (final Exception e) {
+            throw new AssertionError(e);
+        }
+        final BatchDownloadStore.Entry restored = BatchDownloadStore.Entry.fromJson(original);
+        assertEquals(BatchDownloadStore.FORMAT_AUTO, restored.audioFormat);
     }
 
     @Test
