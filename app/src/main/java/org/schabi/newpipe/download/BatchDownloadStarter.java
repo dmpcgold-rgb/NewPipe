@@ -79,6 +79,7 @@ public final class BatchDownloadStarter implements ServiceConnection {
     private Disposable fetchSubscription;
     private boolean bound;
     private boolean finished;
+    private boolean storageError;
     private int queuedInSession;
 
     private BatchDownloadStarter(@NonNull final Context context) {
@@ -271,6 +272,10 @@ public final class BatchDownloadStarter implements ServiceConnection {
                         // Keep this item pending instead of marking a network change as failure.
                         BatchDownloadStore.update(appContext, item,
                                 BatchDownloadStore.PENDING, null);
+                    } else if ("File already exists".equals(error)
+                            || "Already queued in download manager".equals(error)) {
+                        BatchDownloadStore.update(appContext, item,
+                                BatchDownloadStore.SKIPPED, error);
                     } else {
                         BatchDownloadStore.update(appContext, item,
                                 BatchDownloadStore.FAILED, error);
@@ -504,6 +509,14 @@ public final class BatchDownloadStarter implements ServiceConnection {
             return;
         }
         finished = true;
+        storageError = true;
+        for (final BatchDownloadStore.Entry item : BatchDownloadStore.snapshot(appContext)) {
+            if (BatchDownloadStore.PENDING.equals(item.status)
+                    || BatchDownloadStore.QUEUING.equals(item.status)) {
+                BatchDownloadStore.update(appContext, item, BatchDownloadStore.FAILED,
+                        "Download folder unavailable");
+            }
+        }
         mainHandler.post(() -> {
             Toast.makeText(appContext, R.string.gold_batch_storage_error,
                     Toast.LENGTH_LONG).show();
@@ -535,7 +548,7 @@ public final class BatchDownloadStarter implements ServiceConnection {
                 active = null;
             }
         }
-        if (BatchDownloadStore.nextPending(appContext) != null) {
+        if (!storageError && BatchDownloadStore.nextPending(appContext) != null) {
             if (hasDownloadableNow(appContext)) {
                 resumePending(appContext);
             } else {

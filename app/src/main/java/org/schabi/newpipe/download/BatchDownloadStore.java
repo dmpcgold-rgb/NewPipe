@@ -187,7 +187,8 @@ public final class BatchDownloadStore {
                 boolean duplicate = false;
                 for (final Entry old : existing) {
                     if (old.key().equals(entry.key())
-                            && !CANCELLED.equals(old.status)) {
+                            && (PENDING.equals(old.status) || QUEUING.equals(old.status)
+                            || QUEUED.equals(old.status))) {
                         duplicate = true;
                         break;
                     }
@@ -195,7 +196,8 @@ public final class BatchDownloadStore {
                 if (!duplicate) {
                     // A cancelled record is not an active duplicate.
                     existing.removeIf(old -> old.key().equals(entry.key())
-                            && CANCELLED.equals(old.status));
+                            && (CANCELLED.equals(old.status)
+                            || FAILED.equals(old.status) || SKIPPED.equals(old.status)));
                     existing.add(entry);
                     added++;
                 }
