@@ -1,5 +1,10 @@
 name: CI
 
+# Prevent older branch builds from consuming runners after a newer commit.
+concurrency:
+  group: newpipe-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   pull_request:
