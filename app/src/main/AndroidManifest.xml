@@ -166,6 +166,19 @@
         </provider>
 
         <activity
+            android:name=".download.LinkQueueActivity"
+            android:exported="false"
+            android:label="Link-Sammlung" />
+        <activity
+            android:name=".download.VoeBrowserActivity"
+            android:exported="false"
+            android:label="VOE • Download" />
+        <activity
+            android:name=".download.EpisodeHostActivity"
+            android:exported="false"
+            android:label="Hoster auswählen" />
+
+        <activity
             android:name=".RouterActivity"
             android:excludeFromRecents="true"
             android:exported="true"

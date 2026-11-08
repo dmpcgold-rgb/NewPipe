@@ -8,7 +8,9 @@ sealed class FeedState {
     data class ProgressState(
         val currentProgress: Int = -1,
         val maxProgress: Int = -1,
-        @StringRes val progressMessage: Int = 0
+        @StringRes val progressMessage: Int = 0,
+        // The newest known videos are displayed while other subscriptions load.
+        val items: List<StreamItem> = emptyList()
     ) : FeedState()
 
     data class LoadedState(
