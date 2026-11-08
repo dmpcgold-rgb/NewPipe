@@ -7,6 +7,7 @@ on:
       - dev
     paths:
       - 'app/**'
+      - 'buildSrc/**'
       - 'shared/**'
       - 'gradle/**'
       - '*.gradle.kts'
