@@ -183,14 +183,11 @@ public class LinkQueueActivity extends AppCompatActivity {
 
     private void addLinks(final String pasted) {
         final List<String> imported = LinkQueueLinks.extractLinks(pasted);
-        int added = 0;
         for (final String url : imported) {
             if (links.size() >= MAX_LINKS) {
                 break;
             }
-            if (links.add(url)) {
-                added++;
-            }
+            links.add(url);
         }
         if (imported.isEmpty() && !pasted.trim().isEmpty()) {
             Toast.makeText(this, "Kein gültiger HTTPS-Link gefunden",
