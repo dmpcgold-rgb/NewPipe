@@ -144,6 +144,8 @@ public class LinkQueueActivity extends AppCompatActivity {
                 button("Keine markieren", view -> setSelected(false)));
         addRow(root, button("Auswahl herunterladen", view -> downloadSelected()),
                 button("Im Browser öffnen", view -> openSelected()));
+        root.addView(button("VOE • offiziellen Download öffnen",
+                view -> openVoeSelected()));
         addRow(root, button("Auswahl entfernen", view -> removeSelected()),
                 button("Systemdownloads", view -> openSystemDownloads()));
 
@@ -256,6 +258,17 @@ public class LinkQueueActivity extends AppCompatActivity {
             return;
         }
         ShareUtils.openUrlInBrowser(this, selected.get(0));
+    }
+
+    private void openVoeSelected() {
+        final List<String> selected = selectedLinks();
+        if (selected.size() != 1 || !LinkQueueLinks.isVoeUrl(selected.get(0))) {
+            Toast.makeText(this, "Bitte genau einen VOE-Link markieren",
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+        startActivity(new Intent(this, VoeBrowserActivity.class)
+                .putExtra(VoeBrowserActivity.EXTRA_VOE_URL, selected.get(0)));
     }
 
     private String filename(final String url, final int index) {
