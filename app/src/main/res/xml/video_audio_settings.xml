@@ -117,6 +117,12 @@
 
         <SwitchPreferenceCompat
             android:defaultValue="false"
+            android:key="@string/gold_popup_swipe_close_key"
+            android:title="@string/gold_popup_swipe_close_title"
+            android:summary="@string/gold_popup_swipe_close_summary"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
             android:key="@string/gold_audio_dynamics_key"
             android:title="@string/gold_audio_dynamics_title"
             android:summary="@string/gold_audio_dynamics_summary"

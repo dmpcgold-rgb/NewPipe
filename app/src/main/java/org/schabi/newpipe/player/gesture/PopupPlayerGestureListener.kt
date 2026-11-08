@@ -10,6 +10,7 @@ import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
 import org.schabi.newpipe.MainActivity
+import org.schabi.newpipe.R
 import org.schabi.newpipe.ktx.AnimationType
 import org.schabi.newpipe.ktx.animate
 import org.schabi.newpipe.player.ui.PopupPlayerUi
@@ -175,6 +176,16 @@ class PopupPlayerGestureListener(
         return if (player.popupPlayerSelected()) {
             val absVelocityX = abs(velocityX)
             val absVelocityY = abs(velocityY)
+            val swipeToClose = player.prefs.getBoolean(
+                player.context.getString(R.string.gold_popup_swipe_close_key),
+                false
+            )
+            if (swipeToClose && velocityY > TOSS_FLING_VELOCITY &&
+                absVelocityY > absVelocityX * 1.5f
+            ) {
+                playerUi.closePopup()
+                return true
+            }
             if (absVelocityX.coerceAtLeast(absVelocityY) > TOSS_FLING_VELOCITY) {
                 if (absVelocityX > TOSS_FLING_VELOCITY) {
                     playerUi.popupLayoutParams.x = velocityX.toInt()

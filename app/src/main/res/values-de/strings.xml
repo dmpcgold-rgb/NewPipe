@@ -927,4 +927,6 @@
     <string-array name="gold_skip_seconds_labels"><item>0 Sekunden</item><item>5 Sekunden</item><item>10 Sekunden</item><item>15 Sekunden</item><item>20 Sekunden</item><item>30 Sekunden</item></string-array>
     <string name="gold_audio_dynamics_title">Lautstärkespitzen ausgleichen (Android 9+)</string>
     <string name="gold_audio_dynamics_summary">Optionale Audio-Kompression von Android reduziert starke Lautstärkesprünge. Die Wirkung hängt vom Gerät ab, ist keine vollständige Titel-Normalisierung und kann den Klang verändern.</string>
+    <string name="gold_popup_swipe_close_title">Popup-Player nach unten wegwischen</string>
+    <string name="gold_popup_swipe_close_summary">Ein schnelles Wischen nach unten schließt den schwebenden Player. Standardmäßig ausgeschaltet, damit du ihn nicht versehentlich schließt.</string>
 </resources>
