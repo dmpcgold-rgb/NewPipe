@@ -8,22 +8,22 @@ import android.app.DownloadManager;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.os.Environment;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.URLUtil;
 import android.webkit.WebResourceRequest;
+import android.view.MotionEvent;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.schabi.newpipe.util.ThemeHelper;
-import org.schabi.newpipe.util.external_communication.ShareUtils;
 
 import java.util.Locale;
 
@@ -39,6 +39,7 @@ public class VoeBrowserActivity extends AppCompatActivity {
 
     @Nullable
     private WebView browser;
+    private long lastUserTapMs;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -57,6 +58,12 @@ public class VoeBrowserActivity extends AppCompatActivity {
 
         browser = new WebView(this);
         setContentView(browser);
+        browser.setOnTouchListener((view, event) -> {
+            if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+                lastUserTapMs = SystemClock.elapsedRealtime();
+            }
+            return false;
+        });
         final WebSettings settings = browser.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
@@ -76,9 +83,12 @@ public class VoeBrowserActivity extends AppCompatActivity {
                 if (LinkQueueLinks.isVoeUrl(next)) {
                     return false;
                 }
-                if (LinkQueueLinks.isSafeHttps(next)) {
-                    ShareUtils.openUrlInBrowser(VoeBrowserActivity.this, next);
+                // A tapped direct media link is a permitted file-download action.
+                if (request.hasGesture() && LinkQueueLinks.isDirectMedia(next)) {
+                    offerDownload(next, view.getSettings().getUserAgentString(),
+                            null, null);
                 }
+                // Suppress unrelated advertising redirects and popup domains.
                 return true;
             }
         });
@@ -98,25 +108,36 @@ public class VoeBrowserActivity extends AppCompatActivity {
         }
     }
 
+    private boolean fromRecentUserTap() {
+        final long elapsed = SystemClock.elapsedRealtime() - lastUserTapMs;
+        return lastUserTapMs > 0 && elapsed >= 0 && elapsed < 15000;
+    }
+
+    private static boolean isMediaDownload(final String url, final String mimeType) {
+        if (LinkQueueLinks.isDirectMedia(url)) {
+            return true;
+        }
+        if (mimeType == null) {
+            return false;
+        }
+        final String type = mimeType.toLowerCase(Locale.ROOT);
+        return type.startsWith("video/") || type.startsWith("audio/");
+    }
+
     private void offerDownload(final String url, final String userAgent,
                                final String disposition, final String mimeType) {
-        if (!LinkQueueLinks.isSafeHttps(url) || isManifestOrLicense(url)) {
-            Toast.makeText(this, "Kein unterstützter direkter Dateidownload",
-                    Toast.LENGTH_LONG).show();
+        // A page may trigger downloads without a tap. Only enqueue a real media file
+        // offered following the user's interaction; never capture playback streams.
+        if (!fromRecentUserTap() || !LinkQueueLinks.isSafeHttps(url)
+                || isManifestOrLicense(url) || !isMediaDownload(url, mimeType)) {
             return;
         }
         final String original = URLUtil.guessFileName(url, disposition, mimeType);
         final String safeName = original.replaceAll("[^a-zA-Z0-9._-]", "_");
         final String filename = System.currentTimeMillis() + "-"
                 + (safeName.isEmpty() ? "video" : safeName);
-        new AlertDialog.Builder(this)
-                .setTitle("VOE-Datei herunterladen?")
-                .setMessage("Nur wenn du die Datei herunterladen darfst und VOE "
-                        + "den Download anbietet.\nDatei: " + filename)
-                .setPositiveButton("Download", (dialog, which) ->
-                        enqueueDownload(url, userAgent, mimeType, filename))
-                .setNegativeButton("Abbrechen", null)
-                .show();
+        // The user explicitly opted into automatic downloads by tapping Play.
+        enqueueDownload(url, userAgent, mimeType, filename);
     }
 
     private static boolean isManifestOrLicense(final String url) {
