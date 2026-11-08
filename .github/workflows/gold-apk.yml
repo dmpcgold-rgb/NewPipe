@@ -63,7 +63,25 @@ jobs:
           GOLD_SIGNING_STORE_PASSWORD: ${{ secrets.GOLD_STORE_PASSWORD }}
           GOLD_SIGNING_KEY_ALIAS: ${{ secrets.GOLD_KEY_ALIAS }}
           GOLD_SIGNING_KEY_PASSWORD: ${{ secrets.GOLD_KEY_PASSWORD }}
-        run: ./gradlew :app:runCheckstyle :app:assembleContinuous --stacktrace
+        shell: bash
+        run: |
+          set -o pipefail
+          for attempt in 1 2 3; do
+            echo "Gradle build attempt $attempt/3"
+            if ./gradlew :app:runCheckstyle :app:assembleContinuous --stacktrace 2>&1 | tee gradle-build.log; then
+              exit 0
+            fi
+            # Retry transient artifact repository failures; don't hide source or test errors.
+            if ! grep -Eiq 'Gateway Time-out|status code 50[234]|Read timed out|Connection reset|Could not GET|Temporary failure in name resolution' gradle-build.log; then
+              echo "::error::Gradle failed with a non-network error."
+              exit 1
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "::error::Dependency download failed after 3 attempts."
+              exit 1
+            fi
+            sleep 15
+          done
 
       - name: Verify APK signature
         run: |
