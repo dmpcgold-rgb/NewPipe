@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -19,12 +20,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapterMenuWorkaround;
@@ -35,6 +39,7 @@ import com.google.android.material.tabs.TabLayout;
 
 import org.schabi.newpipe.BaseFragment;
 import org.schabi.newpipe.R;
+import org.schabi.newpipe.download.DirectFileBatchDownloader;
 import org.schabi.newpipe.databinding.FragmentMainBinding;
 import org.schabi.newpipe.error.ErrorInfo;
 import org.schabi.newpipe.error.ErrorUtil;
@@ -170,6 +175,10 @@ public class MainFragment extends BaseFragment implements TabLayout.OnTabSelecte
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
+        if (item.getItemId() == R.id.gold_direct_files) {
+            showGoldDirectFileDialog();
+            return true;
+        }
         if (item.getItemId() == R.id.gold_home_bookmarks) {
             NavigationHelper.openBookmarksFragment(getFM());
             return true;
@@ -192,6 +201,34 @@ public class MainFragment extends BaseFragment implements TabLayout.OnTabSelecte
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showGoldDirectFileDialog() {
+        final EditText links = new EditText(requireContext());
+        links.setInputType(InputType.TYPE_CLASS_TEXT
+                | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        links.setMinLines(5);
+        links.setMaxLines(12);
+        links.setHint(R.string.gold_direct_files_hint);
+        links.setPadding(32, 16, 32, 16);
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.gold_direct_files_title)
+                .setMessage(R.string.gold_direct_files_info)
+                .setView(links)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.download, (dialog, which) -> {
+                    final DirectFileBatchDownloader.Result result =
+                            DirectFileBatchDownloader.enqueue(requireActivity(),
+                                    links.getText().toString());
+                    final int messageId = result.permissionRequired
+                            ? R.string.gold_direct_files_permission
+                            : R.string.gold_direct_files_result;
+                    final String message = result.permissionRequired
+                            ? getString(messageId)
+                            : getString(messageId, result.queued, result.skipped);
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show();
+                })
+                .show();
     }
 
     /*//////////////////////////////////////////////////////////////////////////

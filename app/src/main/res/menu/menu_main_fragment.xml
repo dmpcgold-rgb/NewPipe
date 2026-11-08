@@ -21,4 +21,8 @@
         android:id="@+id/gold_home_downloads"
         android:title="@string/downloads"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/gold_direct_files"
+        android:title="@string/gold_direct_files_title"
+        app:showAsAction="never" />
 </menu>
