@@ -8,4 +8,17 @@
         android:orderInCategory="1"
         android:title="@string/search"
         app:showAsAction="always" />
+    <!-- Existing home tabs remain customizable; these are optional quick navigation links. -->
+    <item
+        android:id="@+id/gold_home_bookmarks"
+        android:title="@string/gold_home_bookmarks"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/gold_home_history"
+        android:title="@string/gold_home_history"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/gold_home_downloads"
+        android:title="@string/downloads"
+        app:showAsAction="never" />
 </menu>

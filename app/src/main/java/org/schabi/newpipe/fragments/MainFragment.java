@@ -170,6 +170,18 @@ public class MainFragment extends BaseFragment implements TabLayout.OnTabSelecte
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
+        if (item.getItemId() == R.id.gold_home_bookmarks) {
+            NavigationHelper.openBookmarksFragment(getFM());
+            return true;
+        }
+        if (item.getItemId() == R.id.gold_home_history) {
+            NavigationHelper.openStatisticFragment(getFM());
+            return true;
+        }
+        if (item.getItemId() == R.id.gold_home_downloads) {
+            NavigationHelper.openDownloads(requireActivity());
+            return true;
+        }
         if (item.getItemId() == R.id.action_search) {
             try {
                 NavigationHelper.openSearchFragment(getFM(),

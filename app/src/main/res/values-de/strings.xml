@@ -932,4 +932,6 @@
     <string name="gold_podcast_mode_title">Podcast-Hörmodus</string>
     <string name="gold_podcast_mode_summary">Für Podcasts manuell aktivieren, auch für Video-Podcasts. Solange aktiv, wird die eigene Podcast-Geschwindigkeit verwendet.</string>
     <string name="gold_podcast_speed_title">Podcast-Geschwindigkeit</string>
+    <string name="gold_home_bookmarks">Merkliste und Playlists</string>
+    <string name="gold_home_history">Wiedergabeverlauf</string>
 </resources>

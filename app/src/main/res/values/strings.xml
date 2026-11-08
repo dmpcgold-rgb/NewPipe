@@ -1013,4 +1013,6 @@
     <string name="gold_podcast_mode_title">Podcast listening mode</string>
     <string name="gold_podcast_mode_summary">Manually enable when listening to podcasts, including video podcasts. The separate podcast speed is used until you switch this off.</string>
     <string name="gold_podcast_speed_title">Podcast speed</string>
+    <string name="gold_home_bookmarks">Saved playlists and bookmarks</string>
+    <string name="gold_home_history">Viewing history</string>
 </resources>
