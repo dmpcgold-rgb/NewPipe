@@ -850,4 +850,6 @@
     <string name="channel_tab_courses">Cursos</string>
     <string name="gold_queue_all_videos">Añadir todos los vídeos a la cola de reproducción</string>
     <string name="gold_download_visible_videos">Descargar vídeos mostrados (%1$d)</string>
+    <string name="gold_multi_actions">DESCARGAR / COLA</string>
+    <string name="gold_multi_enqueue_selected">Añadir selección a la cola de reproducción</string>
 </resources>
