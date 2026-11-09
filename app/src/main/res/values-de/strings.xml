@@ -945,4 +945,6 @@
     <string name="gold_direct_files_info">Pro Zeile einen direkten HTTPS-Link zu einer Video- oder Audiodatei einfügen (maximal 40). Die Dateien landen über die Android-Downloadverwaltung im Downloads-Ordner. Webseiten-, Episodenlinks und geschützte Streams werden nicht unterstützt.</string>
     <string name="gold_direct_files_result">%1$d Downloads eingereiht; %2$d ungültige oder fehlgeschlagene Links.</string>
     <string name="gold_direct_files_permission">Dateizugriff erlauben und anschließend erneut auf Herunterladen tippen.</string>
+    <string name="gold_multi_actions">DOWNLOAD / WARTESCHLANGE</string>
+    <string name="gold_multi_enqueue_selected">Auswahl zur Wiedergabewarteschlange hinzufügen</string>
 </resources>
