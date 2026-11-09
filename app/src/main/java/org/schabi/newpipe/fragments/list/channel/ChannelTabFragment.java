@@ -28,6 +28,7 @@ import org.schabi.newpipe.fragments.list.playlist.PlaylistControlViewHolder;
 import org.schabi.newpipe.player.playqueue.ChannelTabPlayQueue;
 import org.schabi.newpipe.player.playqueue.PlayQueue;
 import org.schabi.newpipe.player.PlayerType;
+import org.schabi.newpipe.player.helper.PlayerHolder;
 import org.schabi.newpipe.util.NavigationHelper;
 import org.schabi.newpipe.util.ChannelTabHelper;
 import org.schabi.newpipe.util.ExtractorHelper;
@@ -218,8 +219,9 @@ public class ChannelTabFragment extends BaseListInfoFragment<InfoItem, ChannelTa
                 .setItems(actions, (dialog, which) -> {
                     if (which == 0) {
                         // ChannelTabPlayQueue fetches subsequent pages as playback requires.
-                        NavigationHelper.enqueueOnPlayer(
-                                requireContext(), getPlayQueue(), PlayerType.MAIN);
+                        final PlayerType currentType = PlayerHolder.getInstance().getType();
+                        NavigationHelper.enqueueOnPlayer(requireContext(), getPlayQueue(),
+                                currentType != null ? currentType : PlayerType.MAIN);
                     } else if (which == 1) {
                         // Batch downloads use the page's currently loaded videos only.
                         showGoldBatchDownloadDialogFor(loadedStreams);
