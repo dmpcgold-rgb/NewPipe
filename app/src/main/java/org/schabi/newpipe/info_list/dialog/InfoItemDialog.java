@@ -246,19 +246,20 @@ public final class InfoItemDialog {
         }
 
         /**
-         * Adds {@link StreamDialogDefaultEntry#ENQUEUE} if the player is open and
-         * {@link StreamDialogDefaultEntry#ENQUEUE_NEXT} if there are multiple streams
-         * in the play queue.
+         * Always offers {@link StreamDialogDefaultEntry#ENQUEUE} on stream long presses.
+         * If no player is running, the existing enqueue action starts a paused background
+         * queue; otherwise it appends to the current player's queue. Keep the
+         * {@link StreamDialogDefaultEntry#ENQUEUE_NEXT} option for active queues.
+         *
          * @return the current {@link Builder} instance
          */
         public Builder addEnqueueEntriesIfNeeded() {
-            final PlayerHolder holder = PlayerHolder.getInstance();
-            if (holder.isPlayQueueReady()) {
-                addEntry(StreamDialogDefaultEntry.ENQUEUE);
+            addEntry(StreamDialogDefaultEntry.ENQUEUE);
 
-                if (holder.getQueuePosition() < holder.getQueueSize() - 1) {
-                    addEntry(StreamDialogDefaultEntry.ENQUEUE_NEXT);
-                }
+            final PlayerHolder holder = PlayerHolder.getInstance();
+            if (holder.isPlayQueueReady()
+                    && holder.getQueuePosition() < holder.getQueueSize() - 1) {
+                addEntry(StreamDialogDefaultEntry.ENQUEUE_NEXT);
             }
             return this;
         }

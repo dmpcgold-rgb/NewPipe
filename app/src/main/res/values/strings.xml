@@ -452,7 +452,7 @@
     <string name="audio_track">Audio track</string>
     <string name="hold_to_append">Hold to enqueue</string>
     <string name="show_channel_details">Show channel details</string>
-    <string name="enqueue_stream">Enqueue</string>
+    <string name="enqueue_stream">Add to play queue</string>
     <string name="enqueued">Enqueued</string>
     <string name="enqueue_next_stream">Enqueue next</string>
     <string name="enqueued_next">Enqueued next</string>
@@ -922,6 +922,8 @@
     <string name="api23_requirement_dialog_message">Unfortunately NewPipe depends on a few libraries that dropped support for Android 5.0 and 5.1. The next NewPipe release will therefore only work on devices with Android 6 or higher, sadly. Read more in the blogpost.</string>
     <string name="api23_requirement_dialog_blogpost">Blogpost</string>
     <string name="gold_multi_download">Download selected videos</string>
+    <string name="gold_queue_all_videos">Add all videos to play queue</string>
+    <string name="gold_download_visible_videos">Download displayed videos (%1$d)</string>
     <string name="gold_multi_download_count">Download %1$d selected</string>
     <string name="gold_clear_selection">Clear selection</string>
     <string name="gold_multi_download_description">Choose a format for all selected videos. Items will be added to the regular download queue using your default quality. Existing files will not be overwritten.</string>
@@ -1024,4 +1026,6 @@
     <string name="gold_direct_files_info">Paste one direct HTTPS video or audio file URL per line (maximum 40). Files are saved in your phone’s Downloads folder using Android’s download manager. Webpage/episode links and protected streams are not supported.</string>
     <string name="gold_direct_files_result">%1$d downloads queued; %2$d invalid or failed links.</string>
     <string name="gold_direct_files_permission">Allow file storage access and tap Download again.</string>
+    <string name="gold_multi_actions">DOWNLOAD / PLAY QUEUE</string>
+    <string name="gold_multi_enqueue_selected">Add selected videos to play queue</string>
 </resources>

@@ -44,6 +44,9 @@ import org.schabi.newpipe.fragments.OnScrollBelowItemsListener;
 import org.schabi.newpipe.info_list.InfoListAdapter;
 import org.schabi.newpipe.info_list.ItemViewMode;
 import org.schabi.newpipe.info_list.dialog.InfoItemDialog;
+import org.schabi.newpipe.player.PlayerType;
+import org.schabi.newpipe.player.helper.PlayerHolder;
+import org.schabi.newpipe.player.playqueue.SinglePlayQueue;
 import org.schabi.newpipe.util.NavigationHelper;
 import org.schabi.newpipe.util.PermissionHelper;
 import org.schabi.newpipe.util.OnClickGesture;
@@ -485,7 +488,8 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         final boolean selectionActive = infoListAdapter != null
                 && infoListAdapter.isSelectionMode();
         for (final int id : new int[]{R.id.action_gold_download_selected,
-                R.id.action_gold_select_all, R.id.action_gold_invert_selection,
+                R.id.action_gold_enqueue_selected, R.id.action_gold_select_all,
+                R.id.action_gold_invert_selection,
                 R.id.action_gold_clear_selection}) {
             final MenuItem action = menu.findItem(id);
             if (action != null) {
@@ -517,14 +521,51 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                     getString(R.string.gold_multi_selected_count,
                             infoListAdapter.getSelectedStreamCount()),
                     Snackbar.LENGTH_INDEFINITE);
-            selectionBar.setAction(R.string.gold_multi_download, view -> {
-                showGoldBatchDownloadDialog();
-            });
+            selectionBar.setAction(R.string.gold_multi_actions, view ->
+                    showGoldSelectedActions());
             selectionBar.setBackgroundTint(Color.BLACK);
             selectionBar.setTextColor(Color.WHITE);
             selectionBar.setActionTextColor(Color.WHITE);
             selectionBar.show();
         }
+    }
+
+    private void showGoldSelectedActions() {
+        if (infoListAdapter == null || !infoListAdapter.isSelectionMode()) {
+            return;
+        }
+        final String[] actions = {
+                getString(R.string.gold_multi_enqueue_selected),
+                getString(R.string.gold_multi_download)
+        };
+        new AlertDialog.Builder(requireContext())
+                .setTitle(getString(R.string.gold_multi_selected_count,
+                        infoListAdapter.getSelectedStreamCount()))
+                .setItems(actions, (dialog, which) -> {
+                    if (which == 0) {
+                        enqueueGoldSelectedStreams();
+                    } else {
+                        showGoldBatchDownloadDialog();
+                    }
+                })
+                .show();
+    }
+
+    private void enqueueGoldSelectedStreams() {
+        if (infoListAdapter == null) {
+            return;
+        }
+        final List<StreamInfoItem> selected = infoListAdapter.getSelectedStreams();
+        if (selected.isEmpty()) {
+            return;
+        }
+        // Preserve selection order and append to the active player without interrupting it.
+        // With no active player this starts a paused main-video playback queue.
+        final PlayerType playerType = PlayerHolder.getInstance().getType();
+        NavigationHelper.enqueueOnPlayer(requireContext(),
+                new SinglePlayQueue(selected, 0),
+                playerType != null ? playerType : PlayerType.MAIN);
+        infoListAdapter.clearStreamSelection();
     }
 
     /**
@@ -552,6 +593,10 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         }
         if (item.getItemId() == R.id.action_gold_download_selected) {
             showGoldBatchDownloadDialog();
+            return true;
+        }
+        if (item.getItemId() == R.id.action_gold_enqueue_selected) {
+            enqueueGoldSelectedStreams();
             return true;
         }
         return false;
@@ -688,7 +733,23 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
     }
 
     private void showGoldBatchDownloadDialog() {
-        final List<StreamInfoItem> selected = infoListAdapter.getSelectedStreams();
+        showGoldBatchDownloadDialog(infoListAdapter.getSelectedStreams(), true);
+    }
+
+    /**
+     * Opens the existing batch-download options for the streams currently loaded on a page,
+     * without changing the user's multi-selection.
+     *
+     * @param streams the loaded video or audio items to queue for download
+     */
+    protected final void showGoldBatchDownloadDialogFor(
+            @NonNull final List<StreamInfoItem> streams) {
+        showGoldBatchDownloadDialog(streams, false);
+    }
+
+    private void showGoldBatchDownloadDialog(
+            @NonNull final List<StreamInfoItem> streams, final boolean clearSelection) {
+        final List<StreamInfoItem> selected = new ArrayList<>(streams);
         if (selected.isEmpty()) {
             return;
         }
@@ -794,7 +855,9 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                                     musicPrefix.getText().toString(), musicNumbering.isChecked(),
                                     wifiOnly.isChecked());
                     BatchDownloadStarter.start(context, selected, options);
-                    infoListAdapter.clearStreamSelection();
+                    if (clearSelection) {
+                        infoListAdapter.clearStreamSelection();
+                    }
                 })
                 .show();
     }
