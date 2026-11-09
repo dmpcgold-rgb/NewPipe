@@ -688,7 +688,23 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
     }
 
     private void showGoldBatchDownloadDialog() {
-        final List<StreamInfoItem> selected = infoListAdapter.getSelectedStreams();
+        showGoldBatchDownloadDialog(infoListAdapter.getSelectedStreams(), true);
+    }
+
+    /**
+     * Opens the existing batch-download options for the streams currently loaded on a page,
+     * without changing the user's multi-selection.
+     *
+     * @param streams the loaded video or audio items to queue for download
+     */
+    protected final void showGoldBatchDownloadDialogFor(
+            @NonNull final List<StreamInfoItem> streams) {
+        showGoldBatchDownloadDialog(streams, false);
+    }
+
+    private void showGoldBatchDownloadDialog(
+            @NonNull final List<StreamInfoItem> streams, final boolean clearSelection) {
+        final List<StreamInfoItem> selected = new ArrayList<>(streams);
         if (selected.isEmpty()) {
             return;
         }
@@ -794,7 +810,9 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                                     musicPrefix.getText().toString(), musicNumbering.isChecked(),
                                     wifiOnly.isChecked());
                     BatchDownloadStarter.start(context, selected, options);
-                    infoListAdapter.clearStreamSelection();
+                    if (clearSelection) {
+                        infoListAdapter.clearStreamSelection();
+                    }
                 })
                 .show();
     }
