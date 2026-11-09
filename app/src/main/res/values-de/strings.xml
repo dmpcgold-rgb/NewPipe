@@ -845,6 +845,8 @@
     <string name="energy_saver_title">Energiesparmodus</string>
     <string name="energy_saver_summary">Kleinere Vorschaubilder und weniger Animationen. Online-Suchvorschläge werden abgeschaltet, lokale bleiben verfügbar. Neue Videos starten mit 480p (Pop-up: 360p); höhere Qualität bleibt manuell wählbar. Abo-Abfragen laufen nur bei WLAN und ausreichendem Akkustand, höchstens alle 8 Stunden. Für alle Bildoptimierungen die App neu starten.</string>
     <string name="gold_multi_download">Markierte Videos herunterladen</string>
+    <string name="gold_queue_all_videos">Alle Videos zur Wiedergabewarteschlange hinzufügen</string>
+    <string name="gold_download_visible_videos">Angezeigte Videos herunterladen (%1$d)</string>
     <string name="gold_multi_download_count">%1$d markierte herunterladen</string>
     <string name="gold_clear_selection">Markierung aufheben</string>
     <string name="gold_multi_download_description">Wähle ein Format für alle markierten Videos. Die Dateien werden mit deiner Standardqualität zur bestehenden Downloadliste hinzugefügt. Vorhandene Dateien werden nicht überschrieben.</string>
