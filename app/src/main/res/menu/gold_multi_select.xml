@@ -5,6 +5,10 @@
         android:icon="@drawable/ic_file_download"
         android:title="@string/gold_multi_download"
         app:showAsAction="always" />
+    <item android:id="@+id/action_gold_enqueue_selected"
+        android:icon="@drawable/ic_playlist_play"
+        android:title="@string/gold_multi_enqueue_selected"
+        app:showAsAction="ifRoom" />
     <item android:id="@+id/action_gold_select_all"
         android:title="@string/gold_select_all"
         app:showAsAction="never" />
