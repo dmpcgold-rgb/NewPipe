@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 
 import com.evernote.android.state.State;
 
@@ -26,6 +27,8 @@ import org.schabi.newpipe.fragments.list.BaseListInfoFragment;
 import org.schabi.newpipe.fragments.list.playlist.PlaylistControlViewHolder;
 import org.schabi.newpipe.player.playqueue.ChannelTabPlayQueue;
 import org.schabi.newpipe.player.playqueue.PlayQueue;
+import org.schabi.newpipe.player.PlayerType;
+import org.schabi.newpipe.util.NavigationHelper;
 import org.schabi.newpipe.util.ChannelTabHelper;
 import org.schabi.newpipe.util.ExtractorHelper;
 import org.schabi.newpipe.util.PlayButtonHelper;
@@ -187,7 +190,42 @@ public class ChannelTabFragment extends BaseListInfoFragment<InfoItem, ChannelTa
 
             PlayButtonHelper.initPlaylistControlClickListener(
                     activity, playlistControlBinding, this);
+            // A short tap still plays everything. A long press offers playback
+            // queue and batch-download choices instead of enqueueing silently.
+            playlistControlBinding.playlistCtrlPlayAllButton.setOnLongClickListener(view -> {
+                showPlayAllLongPressActions();
+                return true;
+            });
         }
+    }
+
+    private void showPlayAllLongPressActions() {
+        if (!isAdded() || currentInfo == null) {
+            return;
+        }
+
+        final List<StreamInfoItem> loadedStreams = infoListAdapter.getItemsList().stream()
+                .filter(StreamInfoItem.class::isInstance)
+                .map(StreamInfoItem.class::cast)
+                .collect(Collectors.toList());
+
+        final String[] actions = {
+                getString(R.string.gold_queue_all_videos),
+                getString(R.string.gold_download_visible_videos, loadedStreams.size())
+        };
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.play_all)
+                .setItems(actions, (dialog, which) -> {
+                    if (which == 0) {
+                        // ChannelTabPlayQueue fetches subsequent pages as playback requires.
+                        NavigationHelper.enqueueOnPlayer(
+                                requireContext(), getPlayQueue(), PlayerType.MAIN);
+                    } else if (which == 1) {
+                        // Batch downloads use the page's currently loaded videos only.
+                        showGoldBatchDownloadDialogFor(loadedStreams);
+                    }
+                })
+                .show();
     }
 
     @Override
