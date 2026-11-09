@@ -1026,4 +1026,6 @@
     <string name="gold_direct_files_info">Paste one direct HTTPS video or audio file URL per line (maximum 40). Files are saved in your phone’s Downloads folder using Android’s download manager. Webpage/episode links and protected streams are not supported.</string>
     <string name="gold_direct_files_result">%1$d downloads queued; %2$d invalid or failed links.</string>
     <string name="gold_direct_files_permission">Allow file storage access and tap Download again.</string>
+    <string name="gold_multi_actions">DOWNLOAD / PLAY QUEUE</string>
+    <string name="gold_multi_enqueue_selected">Add selected videos to play queue</string>
 </resources>
