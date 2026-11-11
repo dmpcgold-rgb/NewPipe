@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_horizontal"
     android:orientation="vertical"
@@ -42,6 +42,18 @@
         tools:text="This account has been terminated because we received multiple third-party claims of copyright infringement regarding material that the user posted."
         tools:visibility="visible" />
 
+
+    <Button
+        android:id="@+id/gold_error_details_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:minHeight="48dp"
+        android:text="@string/gold_error_details_title"
+        android:textAllCaps="false"
+        android:theme="@style/ServiceColoredButton"
+        android:visibility="gone"
+        tools:visibility="visible" />
 
     <Button
         android:id="@+id/error_action_button"

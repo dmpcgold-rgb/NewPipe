@@ -1,7 +1,11 @@
 package org.schabi.newpipe.error
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import androidx.appcompat.app.AlertDialog
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
@@ -40,6 +44,8 @@ class ErrorPanelHelper(
         errorPanelRoot.findViewById(R.id.error_retry_button)
     private val errorOpenInBrowserButton: Button =
         errorPanelRoot.findViewById(R.id.error_open_in_browser)
+    private val diagnosticDetailsButton: Button =
+        errorPanelRoot.findViewById(R.id.gold_error_details_button)
 
     private var errorDisposable: Disposable? = null
     private var retryShouldBeShown: Boolean = (onRetry != null)
@@ -61,11 +67,14 @@ class ErrorPanelHelper(
         errorActionButton.isVisible = false
         errorRetryButton.isVisible = false
         errorOpenInBrowserButton.isVisible = false
+        diagnosticDetailsButton.isVisible = false
+        diagnosticDetailsButton.setOnClickListener(null)
     }
 
     fun showError(errorInfo: ErrorInfo) {
         ensureDefaultVisibility()
         errorTextView.setTextWithLinks(errorInfo.getMessage(context))
+        showDiagnosis(errorInfo)
 
         if (errorInfo.recaptchaUrl != null) {
             showAndSetErrorButtonAction(R.string.recaptcha_solve) {
@@ -93,6 +102,54 @@ class ErrorPanelHelper(
         }
 
         setRootVisible()
+    }
+
+    private fun showDiagnosis(errorInfo: ErrorInfo) {
+        val diagnosis = errorInfo.diagnosis ?: return
+        val offline = if (diagnosis.networkRelated) {
+            val connectivity =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            try {
+                connectivity?.activeNetwork == null
+            } catch (ignored: SecurityException) {
+                false
+            }
+        } else {
+            false
+        }
+
+        val reason = context.getString(
+            if (offline) R.string.gold_error_offline else diagnosis.reasonRes
+        )
+        val advice = context.getString(
+            if (offline) R.string.gold_error_offline_advice else diagnosis.adviceRes
+        )
+        errorServiceInfoTextView.text =
+            context.getString(R.string.gold_error_cause_label, reason)
+        errorServiceInfoTextView.isVisible = true
+        errorServiceExplanationTextView.text =
+            context.getString(R.string.gold_error_solution_label, advice)
+        errorServiceExplanationTextView.isVisible = true
+
+        val details = context.getString(R.string.gold_error_technical_code, diagnosis.code) +
+            "\n" + context.getString(R.string.gold_error_technical_type, diagnosis.technicalType) +
+            "\n" + context.getString(R.string.gold_error_technical_service,
+                errorInfo.getServiceName()) +
+            "\n" + context.getString(R.string.gold_error_technical_action,
+                errorInfo.userAction.name)
+        diagnosticDetailsButton.isVisible = true
+        diagnosticDetailsButton.setOnClickListener {
+            AlertDialog.Builder(context)
+                .setTitle(R.string.gold_error_details_title)
+                .setMessage(details)
+                .setPositiveButton(R.string.gold_error_copy_details) { _, _ ->
+                    val clipboard =
+                        context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                    clipboard?.setPrimaryClip(ClipData.newPlainText("NewPipe Gold", details))
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }
     }
 
     /**
@@ -131,6 +188,7 @@ class ErrorPanelHelper(
     fun dispose() {
         errorActionButton.setOnClickListener(null)
         errorRetryButton.setOnClickListener(null)
+        diagnosticDetailsButton.setOnClickListener(null)
         errorDisposable?.dispose()
     }
 
