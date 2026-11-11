@@ -6,8 +6,6 @@
 package org.schabi.newpipe.fragments.list.kiosk;
 
 import android.os.Bundle;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -37,6 +35,9 @@ import org.schabi.newpipe.fragments.list.BaseListInfoFragment;
 import org.schabi.newpipe.util.ExtractorHelper;
 import org.schabi.newpipe.util.KioskTranslator;
 import org.schabi.newpipe.util.Localization;
+
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 import io.reactivex.rxjava3.core.Single;
 
