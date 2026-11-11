@@ -5,11 +5,12 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
-import androidx.appcompat.app.AlertDialog
+import android.net.Uri
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.annotation.StringRes
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.jakewharton.rxbinding4.view.clicks
@@ -131,12 +132,38 @@ class ErrorPanelHelper(
             context.getString(R.string.gold_error_solution_label, advice)
         errorServiceExplanationTextView.isVisible = true
 
-        val details = context.getString(R.string.gold_error_technical_code, diagnosis.code) +
-            "\n" + context.getString(R.string.gold_error_technical_type, diagnosis.technicalType) +
-            "\n" + context.getString(R.string.gold_error_technical_service,
-                errorInfo.getServiceName()) +
-            "\n" + context.getString(R.string.gold_error_technical_action,
-                errorInfo.userAction.name)
+        val requestedHost = errorInfo.openInBrowserUrl?.let { pageUrl ->
+            try {
+                Uri.parse(pageUrl).host?.takeIf { host ->
+                    host.length <= 253 && host.matches(Regex("[A-Za-z0-9.-]+"))
+                }
+            } catch (ignored: IllegalArgumentException) {
+                null
+            }
+        }
+        val details = buildString {
+            append(context.getString(R.string.gold_error_technical_code, diagnosis.code))
+            append("\n")
+            append(context.getString(R.string.gold_error_technical_type, diagnosis.technicalType))
+            append("\n")
+            append(
+                context.getString(
+                    R.string.gold_error_technical_service,
+                    errorInfo.getServiceName()
+                )
+            )
+            append("\n")
+            append(
+                context.getString(
+                    R.string.gold_error_technical_action,
+                    errorInfo.userAction.name
+                )
+            )
+            if (requestedHost != null) {
+                append("\n")
+                append(context.getString(R.string.gold_error_requested_host, requestedHost))
+            }
+        }
         diagnosticDetailsButton.isVisible = true
         diagnosticDetailsButton.setOnClickListener {
             AlertDialog.Builder(context)
