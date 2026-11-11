@@ -45,7 +45,9 @@ data class GoldErrorDiagnosis(
             for (cause in causes.asReversed()) {
                 val httpCode = when (cause) {
                     is HttpDataSource.InvalidResponseCodeException -> cause.responseCode
+
                     is HttpRetryException -> cause.responseCode()
+
                     else -> cause.message?.let {
                         httpCodePattern.find(it)?.groupValues?.get(1)?.toIntOrNull()
                     }
@@ -55,43 +57,71 @@ data class GoldErrorDiagnosis(
                 }
                 when (cause) {
                     is UnknownHostException -> return GoldErrorDiagnosis(
-                        R.string.gold_error_dns, R.string.gold_error_dns_advice,
-                        cause.javaClass.simpleName, "DNS", true
+                        R.string.gold_error_dns,
+                        R.string.gold_error_dns_advice,
+                        cause.javaClass.simpleName,
+                        "DNS",
+                        true
                     )
+
                     is SocketTimeoutException -> return GoldErrorDiagnosis(
-                        R.string.gold_error_timeout, R.string.gold_error_timeout_advice,
-                        cause.javaClass.simpleName, "TIMEOUT", true
+                        R.string.gold_error_timeout,
+                        R.string.gold_error_timeout_advice,
+                        cause.javaClass.simpleName,
+                        "TIMEOUT",
+                        true
                     )
+
                     is SSLException -> return GoldErrorDiagnosis(
-                        R.string.gold_error_tls, R.string.gold_error_tls_advice,
-                        cause.javaClass.simpleName, "TLS", true
+                        R.string.gold_error_tls,
+                        R.string.gold_error_tls_advice,
+                        cause.javaClass.simpleName,
+                        "TLS",
+                        true
                     )
+
                     is ConnectException -> return GoldErrorDiagnosis(
-                        R.string.gold_error_connect, R.string.gold_error_connect_advice,
-                        cause.javaClass.simpleName, "CONNECT", true
+                        R.string.gold_error_connect,
+                        R.string.gold_error_connect_advice,
+                        cause.javaClass.simpleName,
+                        "CONNECT",
+                        true
                     )
+
                     is SocketException -> return GoldErrorDiagnosis(
-                        R.string.gold_error_socket, R.string.gold_error_socket_advice,
-                        cause.javaClass.simpleName, "SOCKET", true
+                        R.string.gold_error_socket,
+                        R.string.gold_error_socket_advice,
+                        cause.javaClass.simpleName,
+                        "SOCKET",
+                        true
                     )
                 }
             }
             for (cause in causes.asReversed()) {
                 when (cause) {
                     is ExtractionException -> return GoldErrorDiagnosis(
-                        R.string.gold_error_extraction, R.string.gold_error_extraction_advice,
-                        cause.javaClass.simpleName, "EXTRACTOR", false
+                        R.string.gold_error_extraction,
+                        R.string.gold_error_extraction_advice,
+                        cause.javaClass.simpleName,
+                        "EXTRACTOR",
+                        false
                     )
+
                     is IOException -> return GoldErrorDiagnosis(
                         R.string.gold_error_generic_network,
                         R.string.gold_error_generic_network_advice,
-                        cause.javaClass.simpleName, "NETWORK_UNKNOWN", true
+                        cause.javaClass.simpleName,
+                        "NETWORK_UNKNOWN",
+                        true
                     )
                 }
             }
             return GoldErrorDiagnosis(
-                R.string.gold_error_unknown, R.string.gold_error_unknown_advice,
-                throwable.javaClass.simpleName, "UNKNOWN", false
+                R.string.gold_error_unknown,
+                R.string.gold_error_unknown_advice,
+                throwable.javaClass.simpleName,
+                "UNKNOWN",
+                false
             )
         }
 
