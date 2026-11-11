@@ -885,4 +885,5 @@
     <string name="gold_error_generic_network_advice">Comprueba conexión, DNS y VPN, y copia los detalles técnicos.</string>
     <string name="gold_error_unknown">No se pudo determinar la causa exacta</string>
     <string name="gold_error_unknown_advice">Copia los detalles técnicos y comunica los errores persistentes.</string>
+    <string name="gold_error_requested_host">Servidor de la página solicitada (puede diferir del fallo DNS): %1$s</string>
 </resources>

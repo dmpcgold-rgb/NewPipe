@@ -980,4 +980,5 @@
     <string name="gold_error_generic_network_advice">Verbindung, DNS und VPN prüfen. Technische Details kopieren.</string>
     <string name="gold_error_unknown">Genaue Ursache konnte nicht ermittelt werden</string>
     <string name="gold_error_unknown_advice">Technische Details kopieren und wiederkehrenden Fehler melden.</string>
+    <string name="gold_error_requested_host">Aufgerufener Seiten-Host (kann vom fehlgeschlagenen DNS-Host abweichen): %1$s</string>
 </resources>

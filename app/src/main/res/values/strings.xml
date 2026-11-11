@@ -1065,4 +1065,5 @@
     <string name="gold_error_generic_network_advice">Check connection, DNS, and VPN, and copy technical details.</string>
     <string name="gold_error_unknown">Exact cause could not be determined</string>
     <string name="gold_error_unknown_advice">Copy technical details and report persistent failures.</string>
+    <string name="gold_error_requested_host">Requested page host (may differ from the host whose DNS failed): %1$s</string>
 </resources>
