@@ -60,7 +60,8 @@ class ErrorInfo private constructor(
      * If present, this resource can alternatively be opened in browser (useful if NewPipe is
      * badly broken).
      */
-    val openInBrowserUrl: String?
+    val openInBrowserUrl: String?,
+    val diagnosis: GoldErrorDiagnosis?
 ) : Parcelable {
 
     @JvmOverloads
@@ -79,7 +80,8 @@ class ErrorInfo private constructor(
         isReportable(throwable),
         isRetryable(throwable),
         (throwable as? ReCaptchaException)?.url,
-        openInBrowserUrl
+        openInBrowserUrl,
+        GoldErrorDiagnosis.from(throwable)
     )
 
     @JvmOverloads
@@ -98,7 +100,8 @@ class ErrorInfo private constructor(
         throwables.any(::isReportable),
         throwables.isEmpty() || throwables.any(::isRetryable),
         throwables.firstNotNullOfOrNull { it as? ReCaptchaException }?.url,
-        openInBrowserUrl
+        openInBrowserUrl,
+        throwables.firstNotNullOfOrNull { GoldErrorDiagnosis.from(it) }
     )
 
     // constructor to manually build ErrorInfo when no throwable is available
@@ -111,7 +114,7 @@ class ErrorInfo private constructor(
     ) :
         this(
             stackTraces, userAction, request, serviceId, ErrorMessage(message),
-            true, false, null, null
+            true, false, null, null, null
         )
 
     // constructor with only one throwable to extract service id and openInBrowserUrl from an Info
