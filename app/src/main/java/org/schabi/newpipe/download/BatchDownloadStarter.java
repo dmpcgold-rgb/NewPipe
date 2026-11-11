@@ -86,6 +86,8 @@ public final class BatchDownloadStarter implements ServiceConnection {
     private int skippedInSession;
     private int processedInSession;
     @Nullable
+    private String audioFallbackNotice;
+    @Nullable
     private String firstFailureReason;
     @Nullable
     private String firstSkippedReason;
@@ -271,12 +273,13 @@ public final class BatchDownloadStarter implements ServiceConnection {
                     if (BatchDownloadStore.isCancelled(appContext, item)) {
                         continue;
                     }
+                    audioFallbackNotice = null;
                     final String error = queueOne(stream, item);
                     if (error == null) {
                         queuedInSession++;
                         processedInSession++;
                         BatchDownloadStore.update(appContext, item,
-                                BatchDownloadStore.QUEUED, null);
+                                BatchDownloadStore.QUEUED, audioFallbackNotice);
                     } else if ("Wi-Fi not connected".equals(error)) {
                         // Keep this item pending instead of marking a network change as failure.
                         BatchDownloadStore.update(appContext, item,
@@ -334,11 +337,18 @@ public final class BatchDownloadStarter implements ServiceConnection {
             if (directory == null
                     || directory.isInvalidSafStorage()
                     || directory.isDirect() == NewPipeSettings.useStorageAccessFramework(appContext)
-                    || downloads == null || !directory.mkdirs()) {
-                return "Download folder unavailable";
+                    || downloads == null || !directory.mkdirs()
+                    || !directory.canWrite()) {
+                return appContext.getString(R.string.gold_batch_folder_unavailable);
             }
             if (item.wifiOnly && !isWifiAvailable(appContext)) {
                 return "Wi-Fi not connected";
+            }
+            if (item.audioOnly && !BatchDownloadStore.FORMAT_AUTO.equals(item.audioFormat)
+                    && !item.audioFormat.equals(spec.extension)) {
+                audioFallbackNotice = appContext.getString(
+                        R.string.gold_batch_actual_audio_format,
+                        spec.extension.toUpperCase(Locale.ROOT));
             }
             final long freeBytes = directory.getFreeStorageSpace();
             if (freeBytes >= 0 && freeBytes < 128L * 1024L * 1024L) {
@@ -402,18 +412,24 @@ public final class BatchDownloadStarter implements ServiceConnection {
         if (streams.isEmpty()) {
             return null;
         }
+        final List<AudioStream> validStreams = new ArrayList<>();
         final List<AudioStream> preferredFormats = new ArrayList<>();
         for (final AudioStream stream : streams) {
+            if (stream.getContent() == null || stream.getContent().isBlank()
+                    || stream.getFormat() == null) {
+                continue;
+            }
+            validStreams.add(stream);
             if (matchesAudioFormat(stream.getFormat(), item.audioFormat)) {
                 preferredFormats.add(stream);
             }
         }
-        final AudioStream chosen = selectAudioStream(preferredFormats, item.audioTrack);
-        if (chosen == null) {
-            return null;
-        }
-        final AudioStream selected = chosen;
-        if (selected.getContent() == null || selected.getFormat() == null) {
+        // MP3 is rarely offered by YouTube. Save a real M4A/Opus stream instead of
+        // failing the whole music download or giving another codec an .mp3 extension.
+        final List<AudioStream> candidates =
+                preferredFormats.isEmpty() ? validStreams : preferredFormats;
+        final AudioStream selected = selectAudioStream(candidates, item.audioTrack);
+        if (selected == null) {
             return null;
         }
         final MediaFormat format = selected.getFormat();
@@ -601,13 +617,15 @@ public final class BatchDownloadStarter implements ServiceConnection {
                 matches.add(stream);
             }
         }
-        if (matches.isEmpty() && (BatchDownloadStore.AUDIO_ORIGINAL.equals(preference)
-                || BatchDownloadStore.AUDIO_DUBBED.equals(preference))) {
+        if (matches.isEmpty() && BatchDownloadStore.AUDIO_DUBBED.equals(preference)) {
+            // Never silently replace an explicitly requested dubbed track.
             return null;
         }
+        // On music videos the original audio often has no locale/track metadata.
         final List<AudioStream> candidates = matches.isEmpty() ? streams : matches;
         final int index = ListHelper.getDefaultAudioFormat(appContext, candidates);
-        return index >= 0 && index < candidates.size() ? candidates.get(index) : null;
+        return index >= 0 && index < candidates.size()
+                ? candidates.get(index) : candidates.get(0);
     }
 
     private void finishWithStorageError() {
@@ -638,10 +656,10 @@ public final class BatchDownloadStarter implements ServiceConnection {
         mainHandler.post(() -> {
             final String summary = appContext.getString(R.string.gold_batch_result,
                     queuedInSession, processedInSession, failedInSession, skippedInSession);
-            final String issue = firstFailureReason != null
-                    ? firstFailureReason : firstSkippedReason;
-            Toast.makeText(appContext, issue == null ? summary : summary + "\n" + issue,
-                    Toast.LENGTH_LONG).show();
+            final String message = firstFailureReason == null ? summary
+                    : appContext.getString(R.string.gold_batch_failed_reason,
+                            failedInSession, firstFailureReason);
+            Toast.makeText(appContext, message, Toast.LENGTH_LONG).show();
             finishBinding();
         });
     }

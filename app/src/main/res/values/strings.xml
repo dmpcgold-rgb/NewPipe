@@ -928,6 +928,9 @@
     <string name="gold_batch_video">Download videos</string>
     <string name="gold_batch_audio">Download audio only</string>
     <string name="gold_batch_result">Queued: %1$d/%2$d. Failed: %3$d. Already present: %4$d.</string>
+    <string name="gold_batch_failed_reason">%1$d download(s) failed: %2$s</string>
+    <string name="gold_batch_folder_unavailable">Music/video folder unavailable. Check Settings > Downloads, set the folder and disable Ask where to save.</string>
+    <string name="gold_batch_actual_audio_format">Saved in %1$s (requested format unavailable)</string>
     <string name="gold_batch_storage_error">For batch downloads, set a permanent download folder and disable Ask where to download in Download settings.</string>
     <string name="gold_batch_started">Adding selected videos to the download queue…</string>
     <string name="gold_select_all">Select all visible</string>
@@ -960,11 +963,11 @@
     <string name="gold_batch_storage_notice">Saved queue can resume after you reopen NewPipe Gold.</string>
     <string name="gold_batch_select_audio_format">Audio format</string>
     <string name="gold_batch_audio_format_auto">Automatic (best available)</string>
-    <string name="gold_batch_audio_format_mp3">MP3 (only if provided by source)</string>
+    <string name="gold_batch_audio_format_mp3">MP3 if available; otherwise best audio format</string>
     <string name="gold_batch_audio_format_m4a">M4A / AAC</string>
     <string name="gold_batch_audio_format_opus">Opus (.opus)</string>
     <string name="gold_batch_audio_format_webm">WebM audio (.webm)</string>
-    <string name="gold_batch_audio_format_note">YouTube normally offers M4A or Opus, not MP3. MP3 conversion is not included. Unavailable formats appear in the error list.</string>
+    <string name="gold_batch_audio_format_note">YouTube normally offers M4A or Opus, not MP3. If a selected format is unavailable, the best available format is downloaded with its real extension. MP3 conversion is not included.</string>
     <string name="gold_batch_format_not_offered">%1$s not offered by video source (conversion required)</string>
     <string name="gold_mobile_data_saver_title">Reduce video quality on mobile data</string>
     <string name="gold_mobile_data_saver_summary">On metered connections, new videos start at 360p. You can still select higher quality manually.</string>
