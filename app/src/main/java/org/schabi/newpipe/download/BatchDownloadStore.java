@@ -369,6 +369,9 @@ public final class BatchDownloadStore {
      * Retry a failed music download using a source-compatible audio format and
      * automatically chosen audio track. Never rename Opus/AAC data to MP3.
      * Queued downloads are left untouched and active duplicate jobs are not added twice.
+     *
+     * @param context Android application context
+     * @param item the audio queue entry to retry
      */
     public static void retryAudioAutomatically(@NonNull final Context context,
                                                @NonNull final Entry item) {
