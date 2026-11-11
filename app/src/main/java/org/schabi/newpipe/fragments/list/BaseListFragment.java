@@ -652,11 +652,19 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         if (BatchDownloadStore.QUEUED.equals(entry.status)) {
             return; // Already handed to NewPipe's normal download manager.
         }
+        final String[] actions = entry.audioOnly
+                ? new String[]{getString(R.string.gold_batch_retry_audio_auto),
+                        getString(R.string.gold_batch_retry_item),
+                        getString(R.string.gold_batch_remove_pending)}
+                : new String[]{getString(R.string.gold_batch_retry_item),
+                        getString(R.string.gold_batch_remove_pending)};
         new AlertDialog.Builder(requireContext())
                 .setTitle(entry.title)
-                .setItems(new String[]{getString(R.string.gold_batch_retry_item),
-                        getString(R.string.gold_batch_remove_pending)}, (dialog, which) -> {
-                    if (which == 0) {
+                .setItems(actions, (dialog, which) -> {
+                    if (entry.audioOnly && which == 0) {
+                        BatchDownloadStore.retryAudioAutomatically(requireContext(), entry);
+                        BatchDownloadStarter.resumePending(requireContext());
+                    } else if (which == (entry.audioOnly ? 1 : 0)) {
                         BatchDownloadStore.retry(requireContext(), entry);
                         BatchDownloadStarter.resumePending(requireContext());
                     } else {

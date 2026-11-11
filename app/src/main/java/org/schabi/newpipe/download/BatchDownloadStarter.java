@@ -82,6 +82,13 @@ public final class BatchDownloadStarter implements ServiceConnection {
     private boolean finished;
     private boolean storageError;
     private int queuedInSession;
+    private int failedInSession;
+    private int skippedInSession;
+    private int processedInSession;
+    @Nullable
+    private String firstFailureReason;
+    @Nullable
+    private String firstSkippedReason;
 
     private BatchDownloadStarter(@NonNull final Context context) {
         appContext = context.getApplicationContext();
@@ -267,6 +274,7 @@ public final class BatchDownloadStarter implements ServiceConnection {
                     final String error = queueOne(stream, item);
                     if (error == null) {
                         queuedInSession++;
+                        processedInSession++;
                         BatchDownloadStore.update(appContext, item,
                                 BatchDownloadStore.QUEUED, null);
                     } else if ("Wi-Fi not connected".equals(error)) {
@@ -275,15 +283,31 @@ public final class BatchDownloadStarter implements ServiceConnection {
                                 BatchDownloadStore.PENDING, null);
                     } else if ("File already exists".equals(error)
                             || "Already queued in download manager".equals(error)) {
+                        skippedInSession++;
+                        processedInSession++;
+                        if (firstSkippedReason == null) {
+                            firstSkippedReason = error;
+                        }
                         BatchDownloadStore.update(appContext, item,
                                 BatchDownloadStore.SKIPPED, error);
                     } else {
+                        failedInSession++;
+                        processedInSession++;
+                        if (firstFailureReason == null) {
+                            firstFailureReason = error;
+                        }
                         BatchDownloadStore.update(appContext, item,
                                 BatchDownloadStore.FAILED, error);
                     }
                 } catch (final Exception exception) {
+                    failedInSession++;
+                    processedInSession++;
+                    final String reason = exception.getClass().getSimpleName();
+                    if (firstFailureReason == null) {
+                        firstFailureReason = reason;
+                    }
                     BatchDownloadStore.update(appContext, item,
-                            BatchDownloadStore.FAILED, exception.getClass().getSimpleName());
+                            BatchDownloadStore.FAILED, reason);
                 }
             }
         }).subscribeOn(Schedulers.io())
@@ -612,9 +636,11 @@ public final class BatchDownloadStarter implements ServiceConnection {
         }
         finished = true;
         mainHandler.post(() -> {
-            Toast.makeText(appContext, appContext.getString(R.string.gold_batch_result,
-                    queuedInSession, BatchDownloadStore.snapshot(appContext).size(),
-                    BatchDownloadStore.count(appContext, BatchDownloadStore.FAILED)),
+            final String summary = appContext.getString(R.string.gold_batch_result,
+                    queuedInSession, processedInSession, failedInSession, skippedInSession);
+            final String issue = firstFailureReason != null
+                    ? firstFailureReason : firstSkippedReason;
+            Toast.makeText(appContext, issue == null ? summary : summary + "\n" + issue,
                     Toast.LENGTH_LONG).show();
             finishBinding();
         });

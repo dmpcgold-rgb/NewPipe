@@ -365,6 +365,49 @@ public final class BatchDownloadStore {
         }
     }
 
+    /**
+     * Retry a failed music download using a source-compatible audio format and
+     * automatically chosen audio track. Never rename Opus/AAC data to MP3.
+     * Queued downloads are left untouched and active duplicate jobs are not added twice.
+     */
+    public static void retryAudioAutomatically(@NonNull final Context context,
+                                               @NonNull final Entry item) {
+        synchronized (LOCK) {
+            final List<Entry> entries = load(context);
+            for (final Entry entry : entries) {
+                if (!entry.key().equals(item.key()) || !entry.audioOnly
+                        || QUEUED.equals(entry.status)) {
+                    continue;
+                }
+                entry.audioFormat = FORMAT_AUTO;
+                entry.audioTrack = AUDIO_AUTO;
+                final String automaticKey = entry.key();
+                boolean alreadyActive = false;
+                final List<Entry> obsolete = new ArrayList<>();
+                for (final Entry other : entries) {
+                    if (other == entry || !automaticKey.equals(other.key())) {
+                        continue;
+                    }
+                    if (PENDING.equals(other.status) || QUEUING.equals(other.status)
+                            || QUEUED.equals(other.status)) {
+                        alreadyActive = true;
+                    } else {
+                        obsolete.add(other);
+                    }
+                }
+                entries.removeAll(obsolete);
+                if (alreadyActive) {
+                    entries.remove(entry);
+                } else {
+                    entry.status = PENDING;
+                    entry.error = "";
+                }
+                save(context, entries);
+                return;
+            }
+        }
+    }
+
     public static int count(@NonNull final Context context, @NonNull final String status) {
         int count = 0;
         for (final Entry entry : snapshot(context)) {

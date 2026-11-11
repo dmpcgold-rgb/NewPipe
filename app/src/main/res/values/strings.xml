@@ -927,7 +927,7 @@
     <string name="gold_multi_download_description">Choose a format for all selected videos. Items will be added to the regular download queue using your default quality. Existing files will not be overwritten.</string>
     <string name="gold_batch_video">Download videos</string>
     <string name="gold_batch_audio">Download audio only</string>
-    <string name="gold_batch_result">%1$d of %2$d downloads queued. Skipped: %3$d.</string>
+    <string name="gold_batch_result">Queued: %1$d/%2$d. Failed: %3$d. Already present: %4$d.</string>
     <string name="gold_batch_storage_error">For batch downloads, set a permanent download folder and disable Ask where to download in Download settings.</string>
     <string name="gold_batch_started">Adding selected videos to the download queue…</string>
     <string name="gold_select_all">Select all visible</string>
@@ -953,7 +953,8 @@
     <string name="gold_batch_status_progress">%1$d of %2$d queued · %3$d failed · %4$d skipped · %5$d pending</string>
     <string name="gold_batch_item_options">Manage selected item</string>
     <string name="gold_batch_remove_pending">Remove pending item</string>
-    <string name="gold_batch_retry_item">Retry this video</string>
+    <string name="gold_batch_retry_item">Retry with same settings</string>
+    <string name="gold_batch_retry_audio_auto">Retry audio with automatic format and track</string>
     <string name="gold_batch_no_wifi">Waiting for Wi-Fi; pending items are saved.</string>
     <string name="gold_batch_retry_notice">Failed downloads are selected for retry.</string>
     <string name="gold_batch_storage_notice">Saved queue can resume after you reopen NewPipe Gold.</string>
