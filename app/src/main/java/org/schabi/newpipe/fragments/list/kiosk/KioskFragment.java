@@ -6,6 +6,8 @@
 package org.schabi.newpipe.fragments.list.kiosk;
 
 import android.os.Bundle;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -126,7 +128,20 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     @Override
     public Single<KioskInfo> loadResult(final boolean forceReload) {
         contentCountry = Localization.getPreferredContentCountry(requireContext());
-        return ExtractorHelper.getKioskInfo(serviceId, url, forceReload);
+        // Retry one transient timeout or connection reset, but never HTTP bans/rate limits.
+        return ExtractorHelper.getKioskInfo(serviceId, url, forceReload)
+                .retry((attempt, error) -> attempt <= 1 && isTransientNetworkError(error));
+    }
+
+    private boolean isTransientNetworkError(@NonNull final Throwable error) {
+        Throwable cause = error;
+        for (int depth = 0; cause != null && depth < 8; depth++) {
+            if (cause instanceof SocketTimeoutException || cause instanceof SocketException) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 
     @Override
