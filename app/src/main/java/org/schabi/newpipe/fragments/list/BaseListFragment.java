@@ -41,6 +41,7 @@ import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.fragments.BaseStateFragment;
 import org.schabi.newpipe.fragments.OnScrollBelowItemsListener;
+import org.schabi.newpipe.player.playqueue.SinglePlayQueue;
 import org.schabi.newpipe.info_list.InfoListAdapter;
 import org.schabi.newpipe.info_list.ItemViewMode;
 import org.schabi.newpipe.info_list.dialog.InfoItemDialog;
@@ -518,7 +519,7 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                             infoListAdapter.getSelectedStreamCount()),
                     Snackbar.LENGTH_INDEFINITE);
             selectionBar.setAction(R.string.gold_multi_download, view -> {
-                showGoldBatchDownloadDialog();
+                showGoldSelectionActions();
             });
             selectionBar.setBackgroundTint(Color.BLACK);
             selectionBar.setTextColor(Color.WHITE);
@@ -568,6 +569,53 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
             return true;
         }
         return false;
+    }
+
+    /**
+     * Offers playback queue actions for the currently selected search/list results.
+     * Reuses the existing player queue commands so ongoing playback is preserved.
+     */
+    private void showGoldSelectionActions() {
+        if (infoListAdapter == null) {
+            return;
+        }
+        final List<StreamInfoItem> selected =
+                new ArrayList<>(infoListAdapter.getSelectedStreams());
+        if (selected.isEmpty()) {
+            return;
+        }
+        final Context context = requireContext();
+        final String[] actions = {
+                "Zur aktuellen Warteschlange hinzufügen",
+                "Als Nächstes abspielen",
+                getString(R.string.gold_multi_download),
+                "Auswahl aufheben"
+        };
+        new AlertDialog.Builder(context)
+                .setTitle(getString(R.string.gold_multi_selected_count, selected.size()))
+                .setItems(actions, (dialog, which) -> {
+                    switch (which) {
+                        case 0:
+                            NavigationHelper.enqueueOnPlayer(context,
+                                    new SinglePlayQueue(selected, 0));
+                            infoListAdapter.clearStreamSelection();
+                            break;
+                        case 1:
+                            NavigationHelper.enqueueNextOnPlayer(context,
+                                    new SinglePlayQueue(selected, 0));
+                            infoListAdapter.clearStreamSelection();
+                            break;
+                        case 2:
+                            showGoldBatchDownloadDialog();
+                            break;
+                        case 3:
+                            infoListAdapter.clearStreamSelection();
+                            break;
+                        default:
+                            break;
+                    }
+                })
+                .show();
     }
 
     private void showGoldBatchStatus() {
