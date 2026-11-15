@@ -2,6 +2,8 @@ name: NewPipe Gold signed release APK
 
 on:
   workflow_dispatch:
+  push:
+    branches: [dev]
   pull_request:
     branches: [dev]
     paths:
@@ -14,6 +16,7 @@ permissions:
 
 jobs:
   signed-release:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
