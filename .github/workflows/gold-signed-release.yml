@@ -26,10 +26,10 @@ jobs:
           java-version: '21'
       - name: Prepare Gold signing key
         env:
-          GOLD_KEYSTORE_BASE64: ${{ secrets.GOLD_KEYSTORE_BASE64 }}
-          GOLD_STORE_PASSWORD: ${{ secrets.GOLD_STORE_PASSWORD }}
-          GOLD_KEY_ALIAS: ${{ secrets.GOLD_KEY_ALIAS }}
-          GOLD_KEY_PASSWORD: ${{ secrets.GOLD_KEY_PASSWORD }}
+          GOLD_KEYSTORE_BASE64: ${{ secrets.GOLDKEYSTOREBASE64 }}
+          GOLD_STORE_PASSWORD: ${{ secrets.KEYSTOREPASSWORT }}
+          GOLD_KEY_ALIAS: ${{ secrets.KEYALIAS }}
+          GOLD_KEY_PASSWORD: ${{ secrets.GOLDKEYPASSWORT }}
         run: |
           set -euo pipefail
           for value in GOLD_KEYSTORE_BASE64 GOLD_STORE_PASSWORD GOLD_KEY_ALIAS GOLD_KEY_PASSWORD; do
