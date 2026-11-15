@@ -43,14 +43,22 @@ jobs:
           echo "GOLD_SIGNING_STORE_PASSWORD=$GOLD_STORE_PASSWORD" >> "$GITHUB_ENV"
           # Prefer the configured alias; recover safely when the keystore contains
           # exactly one private-key entry and the saved alias is outdated.
+          # Check the keystore using the store password without exposing key material.
+          if ! keytool -list -keystore "$RUNNER_TEMP/gold-release.jks" -storepass:env GOLD_STORE_PASSWORD >/dev/null 2>&1; then
+            echo "::error::Keystore cannot be opened with KEYSTOREPASSWORT; verify the stored keystore and store password."
+            exit 1
+          fi
           if ! keytool -list -alias "$GOLD_KEY_ALIAS" -keystore "$RUNNER_TEMP/gold-release.jks" -storepass:env GOLD_STORE_PASSWORD >/dev/null 2>&1; then
-            actual_alias="$(keytool -J-Duser.language=en -J-Duser.country=US -list -v -keystore "$RUNNER_TEMP/gold-release.jks" -storepass:env GOLD_STORE_PASSWORD 2>/dev/null | awk -F': ' '/^Alias name: / { a=$2 } /^Entry type: PrivateKeyEntry/ { print a }')"
-            if [ -z "$actual_alias" ] || [ "$(printf '%s\\n' "$actual_alias" | wc -l)" -ne 1 ]; then
-              echo "::error::Configured key alias is absent, and keystore does not contain exactly one private key entry."
+            # keytool -list emits 'alias, date, PrivateKeyEntry, ...'. Avoid
+            # verbose output localization and never print the alias in logs.
+            actual_alias="$(keytool -J-Duser.language=en -J-Duser.country=US -list -keystore "$RUNNER_TEMP/gold-release.jks" -storepass:env GOLD_STORE_PASSWORD | awk -F',' '/PrivateKeyEntry/ { a=$1; sub(/^[[:space:]]+/, "", a); sub(/[[:space:]]+$/, "", a); print a }')"
+            count="$(printf '%s\n' "$actual_alias" | sed '/^$/d' | wc -l | tr -d ' ')"
+            if [ "$count" != 1 ]; then
+              echo "::error::Saved KEYALIAS does not match; keystore contains $count detectable private-key entries. Check KEYALIAS against the original keystore."
               exit 1
             fi
             GOLD_KEY_ALIAS="$actual_alias"
-            echo "::notice::Using the sole private-key alias found in the existing keystore."
+            echo "::notice::Recovered the only private-key alias from the existing keystore."
           fi
           echo "GOLD_SIGNING_KEY_ALIAS=$GOLD_KEY_ALIAS" >> "$GITHUB_ENV"
           echo "GOLD_SIGNING_KEY_PASSWORD=$GOLD_KEY_PASSWORD" >> "$GITHUB_ENV"
