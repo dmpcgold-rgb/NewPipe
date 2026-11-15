@@ -292,6 +292,14 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
         }
         super.onResume();
 
+        // Refresh suggestion preferences when returning to the search screen.
+        final SharedPreferences suggestionPrefs =
+                PreferenceManager.getDefaultSharedPreferences(activity);
+        showLocalSuggestions = NewPipeSettings.showLocalSearchSuggestions(
+                activity, suggestionPrefs);
+        showRemoteSuggestions = NewPipeSettings.showRemoteSearchSuggestions(
+                activity, suggestionPrefs);
+
         if (suggestionDisposable == null || suggestionDisposable.isDisposed()) {
             initSuggestionObserver();
         }
@@ -814,7 +822,9 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
                         result.add(new SuggestionItem(false, entry));
                     }
                     return result;
-                });
+                })
+                // Remote failures must not suppress local search history.
+                .onErrorReturnItem(new ArrayList<>());
     }
 
     private void initSuggestionObserver() {
