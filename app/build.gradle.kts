@@ -83,6 +83,8 @@ configure<ApplicationExtension> {
         }
 
         release {
+            // Sign the Gold release with the same persistent key used for Gold builds.
+            signingConfig = signingConfigs.findByName("goldRelease")
             System.getProperty("packageSuffix")?.let { suffix ->
                 applicationIdSuffix = suffix
                 resValue("string", "app_name", "NewPipe $suffix")
