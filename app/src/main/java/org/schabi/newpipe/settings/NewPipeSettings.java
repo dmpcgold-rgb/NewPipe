@@ -15,7 +15,6 @@ import org.schabi.newpipe.App;
 import org.schabi.newpipe.R;
 import org.schabi.newpipe.settings.migration.MigrationManager;
 import org.schabi.newpipe.util.DeviceUtils;
-import org.schabi.newpipe.util.EnergySaver;
 
 import java.io.File;
 import java.util.Set;
@@ -139,9 +138,9 @@ public final class NewPipeSettings {
 
     public static boolean showRemoteSearchSuggestions(final Context context,
                                                       final SharedPreferences sharedPreferences) {
-        // Avoid network requests on each search query while battery saving is enabled.
-        // Local suggestions remain available; this does not change the stored preference.
-        return !EnergySaver.isEnabled(context) && showSearchSuggestions(context, sharedPreferences,
+        // Search suggestions are an explicit user preference. Do not silently
+        // disable them when the system battery saver is active.
+        return showSearchSuggestions(context, sharedPreferences,
                 R.string.show_remote_search_suggestions_key);
     }
 
