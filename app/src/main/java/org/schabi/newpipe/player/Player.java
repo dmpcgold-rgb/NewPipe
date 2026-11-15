@@ -639,6 +639,7 @@ public final class Player implements PlaybackListener, Listener {
         final PlaybackParameters savedParameters = retrievePlaybackParametersFromPrefs(this);
         setPlaybackParameters(savedParameters.speed, savedParameters.pitch, playbackSkipSilence);
 
+        goldHttp403Retries = 0;
         playQueue = queue;
         playQueue.init();
         reloadPlayQueueManager();
@@ -1692,6 +1693,17 @@ public final class Player implements PlaybackListener, Listener {
                 break;
             case ERROR_CODE_IO_INVALID_HTTP_CONTENT_TYPE:
             case ERROR_CODE_IO_BAD_HTTP_STATUS:
+                // A YouTube stream may become forbidden while ExoPlayer loads the next range.
+                // Refresh stream extraction instead of immediately skipping the queue item.
+                if (isYoutubeHttp403(error) && playQueue != null
+                        && !exoPlayerIsNull() && goldHttp403Retries < 2) {
+                    goldHttp403Retries++;
+                    setRecovery();
+                    reloadPlayQueueManager();
+                    isCatchableException = true;
+                    onBuffering();
+                    break;
+                }
             case ERROR_CODE_IO_FILE_NOT_FOUND:
             case ERROR_CODE_IO_NO_PERMISSION:
             case ERROR_CODE_IO_CLEARTEXT_NOT_PERMITTED:
@@ -1736,6 +1748,25 @@ public final class Player implements PlaybackListener, Listener {
         if (fragmentListener != null) {
             fragmentListener.onPlayerError(error, isCatchableException);
         }
+    }
+
+    private int goldHttp403Retries = 0;
+
+    private boolean isYoutubeHttp403(@NonNull final PlaybackException error) {
+        if (currentMetadata == null || currentMetadata.getServiceId() != YouTube.getServiceId()) {
+            return false;
+        }
+        Throwable cause = error;
+        while (cause != null) {
+            if (cause instanceof com.google.android.exoplayer2.upstream.HttpDataSource
+                    .InvalidResponseCodeException
+                    && ((com.google.android.exoplayer2.upstream.HttpDataSource
+                    .InvalidResponseCodeException) cause).responseCode == 403) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 
     private void createErrorNotification(@NonNull final PlaybackException error) {
