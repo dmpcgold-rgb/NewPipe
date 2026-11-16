@@ -53,6 +53,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.audiofx.AudioEffect;
@@ -2318,7 +2321,39 @@ public final class Player implements PlaybackListener, Listener {
         }
     }
 
+    /**
+     * Persist a versioned, lightweight queue snapshot independently of the player service.
+     * apply() schedules disk I/O asynchronously. The snapshot is not deleted when the
+     * player service stops; a separate restore flow can read it after process death.
+     */
+    private void saveGoldQueueSnapshot() {
+        if (playQueue == null || playQueue.size() == 0) {
+            return;
+        }
+        try {
+            final JSONArray entries = new JSONArray();
+            for (final PlayQueueItem item : playQueue.getStreams()) {
+                final JSONObject entry = new JSONObject();
+                entry.put("serviceId", item.getServiceId());
+                entry.put("url", item.getUrl());
+                entry.put("title", item.getTitle());
+                entries.put(entry);
+            }
+            final JSONObject snapshot = new JSONObject();
+            snapshot.put("version", 1);
+            snapshot.put("index", playQueue.getIndex());
+            snapshot.put("positionMs", exoPlayerIsNull() ? 0
+                    : Math.max(0, simpleExoPlayer.getCurrentPosition()));
+            snapshot.put("items", entries);
+            context.getSharedPreferences("gold_playback_queue", Context.MODE_PRIVATE)
+                    .edit().putString("snapshot", snapshot.toString()).apply();
+        } catch (final JSONException exception) {
+            Log.w(TAG, "Could not save Gold playback queue", exception);
+        }
+    }
+
     private void notifyQueueUpdateToListeners() {
+        saveGoldQueueSnapshot();
         if (fragmentListener != null && playQueue != null) {
             fragmentListener.onQueueUpdate(playQueue);
         }
