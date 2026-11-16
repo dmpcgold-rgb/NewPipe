@@ -64,7 +64,8 @@ jobs:
           echo "GOLD_SIGNING_KEY_ALIAS=$GOLD_KEY_ALIAS" >> "$GITHUB_ENV"
           echo "GOLD_SIGNING_KEY_PASSWORD=$GOLD_KEY_PASSWORD" >> "$GITHUB_ENV"
       - name: Build signed Gold release APK
-        run: ./gradlew :app:assembleRelease --stacktrace
+        # Monotonic release versionCode across subsequent runs of this workflow.
+        run: ./gradlew :app:assembleRelease -DversionCodeOverride=$((100000 + GITHUB_RUN_NUMBER)) --stacktrace
       - name: Verify signed release APK
         run: |
           set -euo pipefail
