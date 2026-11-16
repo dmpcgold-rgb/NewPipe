@@ -195,12 +195,13 @@ public final class PlayerService extends MediaBrowserServiceCompat {
     @Override
     public void onTaskRemoved(final Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
-        if (player != null && !player.videoPlayerSelected()) {
-            return;
+        // Removing the app from Recents must not kill an active playback session.
+        // Android owns the service lifecycle; calling onDestroy() or halting the VM here
+        // bypasses normal cleanup and can discard the current play queue.
+        // Playback remains controlled through the media notification's close action.
+        if (DEBUG) {
+            Log.d(TAG, "Task removed; keeping playback session alive");
         }
-        onDestroy();
-        // Unload from memory completely
-        Runtime.getRuntime().halt(0);
     }
 
     @Override
