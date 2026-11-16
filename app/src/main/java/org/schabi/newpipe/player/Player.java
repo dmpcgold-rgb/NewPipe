@@ -2170,6 +2170,7 @@ public final class Player implements PlaybackListener, Listener {
                 playQueue.getStreams());
         if (autoQueue != null) {
             playQueue.append(autoQueue.getStreams());
+            saveGoldQueueSnapshot();
         }
     }
 
@@ -2189,10 +2190,12 @@ public final class Player implements PlaybackListener, Listener {
             saveStreamProgressState();
         }
         playQueue.setIndex(index);
+        saveGoldQueueSnapshot();
     }
 
     @Override
     public void onPlayQueueEdited() {
+        saveGoldQueueSnapshot();
         notifyPlaybackUpdateToListeners();
         UIs.call(PlayerUi::onPlayQueueEdited);
     }
