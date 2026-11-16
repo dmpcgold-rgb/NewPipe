@@ -20,6 +20,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - uses: android-actions/setup-android@v3
+      # GitHub's Ubuntu runner already provides ANDROID_HOME and Android SDK tools.
+      # setup-android runs sdkmanager --update, which can fail before compilation.
+      - name: Verify Android SDK
+        run: |
+          test -d "$ANDROID_HOME"
+          echo "Android SDK: $ANDROID_HOME"
       - name: Validate Android debug compilation
         run: ./gradlew :app:compileDebugJavaWithJavac :app:compileDebugKotlin --stacktrace
