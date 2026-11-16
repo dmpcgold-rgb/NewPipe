@@ -1646,6 +1646,61 @@ public final class Player implements PlaybackListener, Listener {
     public void onPrepare() {
         if (!exoPlayerIsNull()) {
             simpleExoPlayer.prepare();
+        } else if (playQueue == null) {
+            restoreGoldQueueSnapshot();
+        }
+    }
+
+    /** Restore a previously saved queue when the media session is prepared without a player. */
+    private void restoreGoldQueueSnapshot() {
+        final String raw = context.getSharedPreferences("gold_playback_queue",
+                Context.MODE_PRIVATE).getString("snapshot", null);
+        if (raw == null) {
+            return;
+        }
+        try {
+            final JSONObject snapshot = new JSONObject(raw);
+            if (snapshot.optInt("version", -1) != 1) {
+                return;
+            }
+            final JSONArray entries = snapshot.optJSONArray("items");
+            if (entries == null || entries.length() == 0) {
+                return;
+            }
+            final java.util.List<JSONObject> validEntries = new java.util.ArrayList<>();
+            for (int i = 0; i < entries.length(); i++) {
+                final JSONObject entry = entries.optJSONObject(i);
+                if (entry != null && entry.optInt("serviceId", -1) >= 0
+                        && !entry.optString("url", "").isEmpty()) {
+                    validEntries.add(entry);
+                }
+            }
+            if (validEntries.isEmpty()) {
+                return;
+            }
+            final int requestedIndex = Math.max(0, snapshot.optInt("index", 0));
+            final long positionMs = Math.max(0L, snapshot.optLong("positionMs", 0L));
+            streamItemDisposable.add(Observable.fromIterable(validEntries)
+                    .concatMap(entry -> ExtractorHelper.getStreamInfo(
+                            entry.optInt("serviceId"), entry.optString("url"), false)
+                            .toObservable().onErrorResumeNext(Observable.empty()))
+                    .toList()
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(infos -> {
+                        if (infos.isEmpty() || playQueue != null) {
+                            return;
+                        }
+                        final int index = Math.min(requestedIndex, infos.size() - 1);
+                        final java.util.List<org.schabi.newpipe.extractor.stream.StreamInfoItem>
+                                items = new java.util.ArrayList<>(infos);
+                        final PlayQueue restored = new SinglePlayQueue(items, index);
+                        restored.setRecovery(index, positionMs);
+                        // Restore paused; never start audio unexpectedly after process restart.
+                        initUIsForCurrentPlayerType();
+                        initPlayback(restored, false);
+                    }, error -> Log.w(TAG, "Could not restore Gold queue", error)));
+        } catch (final JSONException exception) {
+            Log.w(TAG, "Invalid Gold playback snapshot", exception);
         }
     }
     //endregion
