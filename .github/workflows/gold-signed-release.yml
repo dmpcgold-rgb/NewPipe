@@ -64,7 +64,7 @@ jobs:
           echo "GOLD_SIGNING_KEY_ALIAS=$GOLD_KEY_ALIAS" >> "$GITHUB_ENV"
           echo "GOLD_SIGNING_KEY_PASSWORD=$GOLD_KEY_PASSWORD" >> "$GITHUB_ENV"
       - name: Build signed Gold release APK
-        run: ./gradlew :app:assembleRelease -DpackageSuffix=.gold --stacktrace
+        run: ./gradlew :app:assembleRelease --stacktrace
       - name: Verify signed release APK
         run: |
           set -euo pipefail
