@@ -410,6 +410,7 @@ public final class Player implements PlaybackListener, Listener {
                         return;
                     }
                     playQueue.append(newQueue.getStreams());
+                    saveGoldQueueSnapshot();
                     return;
                 }
 
@@ -425,6 +426,7 @@ public final class Player implements PlaybackListener, Listener {
                     }
                     final PlayQueueItem newItem = newQueue.getStreams().get(0);
                     playQueue.enqueueNext(newItem, false);
+                    saveGoldQueueSnapshot();
                     return;
                 }
 
@@ -1354,6 +1356,7 @@ public final class Player implements PlaybackListener, Listener {
         if (playQueue.getIndex() < playQueue.size() - 1) {
             playQueue.offsetIndex(+1);
         }
+        saveGoldQueueSnapshot();
         if (isProgressLoopRunning()) {
             stopProgressLoop();
         }
