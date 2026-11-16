@@ -730,6 +730,7 @@ public final class Player implements PlaybackListener, Listener {
     }
 
     public void destroy() {
+        saveGoldQueueSnapshot();
         if (DEBUG) {
             Log.d(TAG, "destroy() called");
         }
@@ -1052,10 +1053,17 @@ public final class Player implements PlaybackListener, Listener {
     //////////////////////////////////////////////////////////////////////////*/
     //region Progress loop and updates
 
+    private long lastGoldQueueSnapshotTimeMs;
+
     private void onUpdateProgress(final int currentProgress,
                                   final int duration,
                                   final int bufferPercent) {
         if (isPrepared) {
+            final long now = SystemClock.elapsedRealtime();
+            if (now - lastGoldQueueSnapshotTimeMs >= 30_000L) {
+                lastGoldQueueSnapshotTimeMs = now;
+                saveGoldQueueSnapshot();
+            }
             UIs.call(ui -> ui.onUpdateProgress(currentProgress, duration, bufferPercent));
             notifyProgressUpdateToListeners(currentProgress, duration, bufferPercent);
             maybeGoldSkipIntroOutro(currentProgress, duration);
@@ -1318,6 +1326,7 @@ public final class Player implements PlaybackListener, Listener {
         }
 
         // Save before leaving playback, rather than relying only on app shutdown.
+        saveGoldQueueSnapshot();
         saveStreamProgressState();
         UIs.call(PlayerUi::onPaused);
     }
