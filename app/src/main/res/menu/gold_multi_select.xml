@@ -5,6 +5,12 @@
         android:icon="@drawable/ic_file_download"
         android:title="@string/gold_multi_download"
         app:showAsAction="always" />
+    <item android:id="@+id/action_gold_enqueue_selected"
+        android:title="@string/gold_enqueue_selected"
+        app:showAsAction="never" />
+    <item android:id="@+id/action_gold_enqueue_next_selected"
+        android:title="@string/gold_enqueue_next_selected"
+        app:showAsAction="never" />
     <item android:id="@+id/action_gold_select_all"
         android:title="@string/gold_select_all"
         app:showAsAction="never" />
