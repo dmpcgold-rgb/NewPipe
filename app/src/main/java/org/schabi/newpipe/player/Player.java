@@ -1699,6 +1699,7 @@ public final class Player implements PlaybackListener, Listener {
                         }
                         int index = 0;
                         int closestDistance = Integer.MAX_VALUE;
+                        boolean exactItemRestored = false;
                         final java.util.List<org.schabi.newpipe.extractor.stream.StreamInfoItem>
                                 items = new java.util.ArrayList<>();
                         for (final android.util.Pair<Integer,
@@ -1707,11 +1708,15 @@ public final class Player implements PlaybackListener, Listener {
                             if (distance < closestDistance) {
                                 index = items.size();
                                 closestDistance = distance;
+                                exactItemRestored = distance == 0;
                             }
                             items.add(item.second);
                         }
                         final PlayQueue restored = new SinglePlayQueue(items, index);
-                        restored.setRecovery(index, positionMs);
+                        // A fallback video must not inherit another video's timestamp.
+                        if (exactItemRestored) {
+                            restored.setRecovery(index, positionMs);
+                        }
                         // Restore paused; never start audio unexpectedly after process restart.
                         initUIsForCurrentPlayerType();
                         initPlayback(restored, false);
