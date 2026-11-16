@@ -80,7 +80,9 @@ jobs:
             exit 1
           fi
           echo "Verified update package: $ACTUAL_PACKAGE"
-          "$BUILD_TOOLS/apksigner" verify --print-certs "$APK" | grep 'Signer #1 certificate SHA-256 digest:'
+          # apksigner versions format certificate labels differently. The verification
+          # exit code above is authoritative; certificate output is diagnostic only.
+          "$BUILD_TOOLS/apksigner" verify --print-certs "$APK"
           mkdir -p release-artifact
           cp "$APK" release-artifact/NewPipe-Gold-release.apk
       - uses: actions/upload-artifact@v4
