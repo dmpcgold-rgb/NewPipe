@@ -85,10 +85,9 @@ configure<ApplicationExtension> {
         release {
             // Sign the Gold release with the same persistent key used for Gold builds.
             signingConfig = signingConfigs.findByName("goldRelease")
-            System.getProperty("packageSuffix")?.let { suffix ->
-                applicationIdSuffix = suffix
-                resValue("string", "app_name", "NewPipe $suffix")
-            }
+            // Release APKs must update the existing NewPipe .gold installation.
+            applicationIdSuffix = ".gold"
+            resValue("string", "app_name", "NewPipe Gold")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -99,8 +98,8 @@ configure<ApplicationExtension> {
 
         register("continuous") {
             initWith(getByName("release"))
+            // Never silently sign a Gold update with the debug key.
             signingConfig = signingConfigs.findByName("goldRelease")
-                ?: signingConfigs.getByName("debug")
             isDefault = true
 
             // Gold builds must retain one application ID across all branches.
