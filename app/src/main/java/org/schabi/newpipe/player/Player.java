@@ -424,8 +424,12 @@ public final class Player implements PlaybackListener, Listener {
                     if (newQueue == null) {
                         return;
                     }
-                    final PlayQueueItem newItem = newQueue.getStreams().get(0);
-                    playQueue.enqueueNext(newItem, false);
+                    // enqueueNext inserts directly after the current item, so reverse
+                    // iteration preserves the user's selected order for batch enqueue.
+                    final java.util.List<PlayQueueItem> items = newQueue.getStreams();
+                    for (int i = items.size() - 1; i >= 0; i--) {
+                        playQueue.enqueueNext(items.get(i), false);
+                    }
                     saveGoldQueueSnapshot();
                     return;
                 }
