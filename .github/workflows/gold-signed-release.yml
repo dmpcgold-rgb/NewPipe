@@ -80,7 +80,12 @@ jobs:
             echo "::error::Wrong APK package: $ACTUAL_PACKAGE (expected $EXPECTED_PACKAGE)"
             exit 1
           fi
-          echo "Verified update package: $ACTUAL_PACKAGE"
+          # A debug APK must never be published as the Gold update.
+          if "$BUILD_TOOLS/aapt" dump badging "$APK" | grep -q '^application-debuggable'; then
+            echo "::error::Refusing to publish a debuggable APK as NewPipe Gold release."
+            exit 1
+          fi
+          echo "Verified non-debug Gold update package: $ACTUAL_PACKAGE"
           # Display the actual Android versionCode to diagnose update downgrades.
           "$BUILD_TOOLS/aapt" dump badging "$APK" | grep '^package:'
           # apksigner versions format certificate labels differently. The verification
