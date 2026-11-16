@@ -1688,8 +1688,9 @@ public final class Player implements PlaybackListener, Listener {
                         return ExtractorHelper.getStreamInfo(entry.optInt("serviceId"),
                                         entry.optString("url"), false)
                                 .toObservable()
-                                .map(info -> new android.util.Pair<>(i, info))
-                                .onErrorResumeNext(Observable.empty());
+                                .map(info -> new android.util.Pair<Integer,
+                                        org.schabi.newpipe.extractor.stream.StreamInfo>(i, info))
+                                .onErrorResumeNext(error -> Observable.empty());
                     })
                     .toList()
                     .observeOn(AndroidSchedulers.mainThread())
@@ -1700,8 +1701,7 @@ public final class Player implements PlaybackListener, Listener {
                         int index = 0;
                         int closestDistance = Integer.MAX_VALUE;
                         boolean exactItemRestored = false;
-                        final java.util.List<org.schabi.newpipe.extractor.stream.StreamInfoItem>
-                                items = new java.util.ArrayList<>();
+                        final java.util.List<PlayQueueItem> items = new java.util.ArrayList<>();
                         for (final android.util.Pair<Integer,
                                 org.schabi.newpipe.extractor.stream.StreamInfo> item : resolved) {
                             final int distance = Math.abs(item.first - requestedIndex);
@@ -1710,9 +1710,13 @@ public final class Player implements PlaybackListener, Listener {
                                 closestDistance = distance;
                                 exactItemRestored = distance == 0;
                             }
-                            items.add(item.second);
+                            items.add(new PlayQueueItem(item.second));
                         }
-                        final PlayQueue restored = new SinglePlayQueue(items, index);
+                        final PlayQueue restored = new SinglePlayQueue(items.get(0));
+                        if (items.size() > 1) {
+                            restored.append(items.subList(1, items.size()));
+                        }
+                        restored.setIndex(index);
                         // A fallback video must not inherit another video's timestamp.
                         if (exactItemRestored) {
                             restored.setRecovery(index, positionMs);
