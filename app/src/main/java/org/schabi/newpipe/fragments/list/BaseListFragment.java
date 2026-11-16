@@ -42,6 +42,7 @@ import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.fragments.BaseStateFragment;
 import org.schabi.newpipe.fragments.OnScrollBelowItemsListener;
 import org.schabi.newpipe.info_list.InfoListAdapter;
+import org.schabi.newpipe.player.playqueue.SinglePlayQueue;
 import org.schabi.newpipe.info_list.ItemViewMode;
 import org.schabi.newpipe.info_list.dialog.InfoItemDialog;
 import org.schabi.newpipe.util.NavigationHelper;
@@ -486,6 +487,7 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                 && infoListAdapter.isSelectionMode();
         for (final int id : new int[]{R.id.action_gold_download_selected,
                 R.id.action_gold_select_all, R.id.action_gold_invert_selection,
+                R.id.action_gold_enqueue_selected, R.id.action_gold_enqueue_next_selected,
                 R.id.action_gold_clear_selection}) {
             final MenuItem action = menu.findItem(id);
             if (action != null) {
@@ -552,6 +554,20 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         }
         if (item.getItemId() == R.id.action_gold_download_selected) {
             showGoldBatchDownloadDialog();
+            return true;
+        }
+        if (item.getItemId() == R.id.action_gold_enqueue_selected
+                || item.getItemId() == R.id.action_gold_enqueue_next_selected) {
+            final List<StreamInfoItem> selected = infoListAdapter.getSelectedStreams();
+            if (!selected.isEmpty()) {
+                final SinglePlayQueue queue = new SinglePlayQueue(selected, 0);
+                if (item.getItemId() == R.id.action_gold_enqueue_selected) {
+                    NavigationHelper.enqueueOnPlayer(requireContext(), queue);
+                } else {
+                    NavigationHelper.enqueueNextOnPlayer(requireContext(), queue);
+                }
+                infoListAdapter.clearStreamSelection();
+            }
             return true;
         }
         return false;
