@@ -2412,8 +2412,11 @@ public final class Player implements PlaybackListener, Listener {
             final JSONObject snapshot = new JSONObject();
             snapshot.put("version", 1);
             snapshot.put("index", playQueue.getIndex());
-            snapshot.put("positionMs", exoPlayerIsNull() ? 0
-                    : Math.max(0, simpleExoPlayer.getCurrentPosition()));
+            final long recoveryPosition = playQueue.getItem() == null ? 0L
+                    : playQueue.getItem().getRecoveryPosition();
+            snapshot.put("positionMs", exoPlayerIsNull()
+                    ? Math.max(0L, recoveryPosition)
+                    : Math.max(0L, simpleExoPlayer.getCurrentPosition()));
             snapshot.put("items", entries);
             context.getSharedPreferences("gold_playback_queue", Context.MODE_PRIVATE)
                     .edit().putString("snapshot", snapshot.toString()).apply();
