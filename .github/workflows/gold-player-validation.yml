@@ -1,0 +1,25 @@
+name: Gold player queue validation
+
+on:
+  pull_request:
+    paths:
+      - 'app/src/main/java/org/schabi/newpipe/player/**'
+      - '.github/workflows/gold-player-validation.yml'
+  workflow_dispatch:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Validate Android debug compilation
+        run: ./gradlew :app:compileDebugJavaWithJavac :app:compileDebugKotlin --stacktrace
