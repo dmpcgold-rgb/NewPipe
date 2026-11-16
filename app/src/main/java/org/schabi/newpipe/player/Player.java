@@ -2414,9 +2414,12 @@ public final class Player implements PlaybackListener, Listener {
             snapshot.put("index", playQueue.getIndex());
             final long recoveryPosition = playQueue.getItem() == null ? 0L
                     : playQueue.getItem().getRecoveryPosition();
-            snapshot.put("positionMs", exoPlayerIsNull()
-                    ? Math.max(0L, recoveryPosition)
-                    : Math.max(0L, simpleExoPlayer.getCurrentPosition()));
+            final long playerPosition = exoPlayerIsNull() ? 0L
+                    : Math.max(0L, simpleExoPlayer.getCurrentPosition());
+            // During initialization the new ExoPlayer can still report zero before it
+            // applies the restored seek. Keep the saved recovery position in that case.
+            snapshot.put("positionMs", playerPosition == 0L
+                    ? Math.max(0L, recoveryPosition) : playerPosition);
             snapshot.put("items", entries);
             context.getSharedPreferences("gold_playback_queue", Context.MODE_PRIVATE)
                     .edit().putString("snapshot", snapshot.toString()).apply();
