@@ -70,7 +70,17 @@ jobs:
           set -euo pipefail
           APK="$(find app/build/outputs/apk/release -name '*.apk' -type f | head -n 1)"
           test -n "$APK"
-          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --verbose "$APK"
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          "$BUILD_TOOLS/apksigner" verify --verbose "$APK"
+          # Prevent accidentally shipping a second app with a branch-specific ID.
+          EXPECTED_PACKAGE="org.schabi.newpipe.gold"
+          ACTUAL_PACKAGE="$("$BUILD_TOOLS/aapt" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)"
+          if [ "$ACTUAL_PACKAGE" != "$EXPECTED_PACKAGE" ]; then
+            echo "::error::Wrong APK package: $ACTUAL_PACKAGE (expected $EXPECTED_PACKAGE)"
+            exit 1
+          fi
+          echo "Verified update package: $ACTUAL_PACKAGE"
+          "$BUILD_TOOLS/apksigner" verify --print-certs "$APK" | grep 'Signer #1 certificate SHA-256 digest:'
           mkdir -p release-artifact
           cp "$APK" release-artifact/NewPipe-Gold-release.apk
       - uses: actions/upload-artifact@v4
