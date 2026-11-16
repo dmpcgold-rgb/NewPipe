@@ -1680,19 +1680,36 @@ public final class Player implements PlaybackListener, Listener {
             }
             final int requestedIndex = Math.max(0, snapshot.optInt("index", 0));
             final long positionMs = Math.max(0L, snapshot.optLong("positionMs", 0L));
-            streamItemDisposable.add(Observable.fromIterable(validEntries)
-                    .concatMap(entry -> ExtractorHelper.getStreamInfo(
-                            entry.optInt("serviceId"), entry.optString("url"), false)
-                            .toObservable().onErrorResumeNext(Observable.empty()))
+            // Keep the original indices even if one URL cannot be resolved. Otherwise
+            // skipping a broken entry would restore playback at the wrong video.
+            streamItemDisposable.add(Observable.range(0, validEntries.size())
+                    .concatMap(i -> {
+                        final JSONObject entry = validEntries.get(i);
+                        return ExtractorHelper.getStreamInfo(entry.optInt("serviceId"),
+                                        entry.optString("url"), false)
+                                .toObservable()
+                                .map(info -> new android.util.Pair<>(i, info))
+                                .onErrorResumeNext(Observable.empty());
+                    })
                     .toList()
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(infos -> {
-                        if (infos.isEmpty() || playQueue != null) {
+                    .subscribe(resolved -> {
+                        if (resolved.isEmpty() || playQueue != null) {
                             return;
                         }
-                        final int index = Math.min(requestedIndex, infos.size() - 1);
+                        int index = 0;
+                        int closestDistance = Integer.MAX_VALUE;
                         final java.util.List<org.schabi.newpipe.extractor.stream.StreamInfoItem>
-                                items = new java.util.ArrayList<>(infos);
+                                items = new java.util.ArrayList<>();
+                        for (final android.util.Pair<Integer,
+                                org.schabi.newpipe.extractor.stream.StreamInfo> item : resolved) {
+                            final int distance = Math.abs(item.first - requestedIndex);
+                            if (distance < closestDistance) {
+                                index = items.size();
+                                closestDistance = distance;
+                            }
+                            items.add(item.second);
+                        }
                         final PlayQueue restored = new SinglePlayQueue(items, index);
                         restored.setRecovery(index, positionMs);
                         // Restore paused; never start audio unexpectedly after process restart.
