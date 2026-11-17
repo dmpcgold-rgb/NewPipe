@@ -65,7 +65,19 @@ jobs:
           echo "GOLD_SIGNING_KEY_PASSWORD=$GOLD_KEY_PASSWORD" >> "$GITHUB_ENV"
       - name: Build signed Gold release APK
         # Monotonic release versionCode across subsequent runs of this workflow.
-        run: ./gradlew :app:assembleRelease -DversionCodeOverride=$((100000 + GITHUB_RUN_NUMBER)) --stacktrace
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if ./gradlew :app:assembleRelease -DversionCodeOverride=$((100000 + GITHUB_RUN_NUMBER)) --stacktrace --refresh-dependencies; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "::error::Gold release failed after 3 attempts."
+              exit 1
+            fi
+            echo "::warning::Gradle build failed; retrying dependency resolution (attempt $attempt/3)."
+            sleep 15
+          done
       - name: Verify signed release APK
         run: |
           set -euo pipefail
