@@ -519,9 +519,22 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
                     getString(R.string.gold_multi_selected_count,
                             infoListAdapter.getSelectedStreamCount()),
                     Snackbar.LENGTH_INDEFINITE);
-            selectionBar.setAction(R.string.gold_multi_download, view -> {
-                showGoldBatchDownloadDialog();
-            });
+            // Channel tabs may not expose the child fragment's overflow menu.
+            // Keep queue actions accessible directly from the selection snackbar.
+            selectionBar.setAction(R.string.gold_selection_actions, view ->
+                    new AlertDialog.Builder(requireContext())
+                            .setItems(new String[]{
+                                    getString(R.string.gold_enqueue_selected),
+                                    getString(R.string.gold_enqueue_next_selected),
+                                    getString(R.string.gold_multi_download)
+                            }, (dialog, which) -> {
+                                if (which == 2) {
+                                    showGoldBatchDownloadDialog();
+                                } else {
+                                    enqueueGoldSelection(which == 1);
+                                }
+                            })
+                            .show());
             selectionBar.setBackgroundTint(Color.BLACK);
             selectionBar.setTextColor(Color.WHITE);
             selectionBar.setActionTextColor(Color.WHITE);
@@ -558,19 +571,24 @@ public abstract class BaseListFragment<I, N> extends BaseStateFragment<I>
         }
         if (item.getItemId() == R.id.action_gold_enqueue_selected
                 || item.getItemId() == R.id.action_gold_enqueue_next_selected) {
-            final List<StreamInfoItem> selected = infoListAdapter.getSelectedStreams();
-            if (!selected.isEmpty()) {
-                final SinglePlayQueue queue = new SinglePlayQueue(selected, 0);
-                if (item.getItemId() == R.id.action_gold_enqueue_selected) {
-                    NavigationHelper.enqueueOnPlayer(requireContext(), queue);
-                } else {
-                    NavigationHelper.enqueueNextOnPlayer(requireContext(), queue);
-                }
-                infoListAdapter.clearStreamSelection();
-            }
+            enqueueGoldSelection(item.getItemId() == R.id.action_gold_enqueue_next_selected);
             return true;
         }
         return false;
+    }
+
+    private void enqueueGoldSelection(final boolean playNext) {
+        final List<StreamInfoItem> selected = infoListAdapter.getSelectedStreams();
+        if (selected.isEmpty()) {
+            return;
+        }
+        final SinglePlayQueue queue = new SinglePlayQueue(selected, 0);
+        if (playNext) {
+            NavigationHelper.enqueueNextOnPlayer(requireContext(), queue);
+        } else {
+            NavigationHelper.enqueueOnPlayer(requireContext(), queue);
+        }
+        infoListAdapter.clearStreamSelection();
     }
 
     @Override
