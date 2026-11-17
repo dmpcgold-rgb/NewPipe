@@ -16,7 +16,8 @@ permissions:
 
 jobs:
   signed-release:
-    if: github.event_name != 'pull_request'
+    # Never expose signing secrets to forked pull requests.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -63,13 +64,45 @@ jobs:
           echo "GOLD_SIGNING_KEY_ALIAS=$GOLD_KEY_ALIAS" >> "$GITHUB_ENV"
           echo "GOLD_SIGNING_KEY_PASSWORD=$GOLD_KEY_PASSWORD" >> "$GITHUB_ENV"
       - name: Build signed Gold release APK
-        run: ./gradlew :app:assembleRelease -DpackageSuffix=.gold --stacktrace
+        # Monotonic release versionCode across subsequent runs of this workflow.
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if ./gradlew :app:assembleRelease -DversionCodeOverride=$((100000 + GITHUB_RUN_NUMBER)) --stacktrace --refresh-dependencies; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "::error::Gold release failed after 3 attempts."
+              exit 1
+            fi
+            echo "::warning::Gradle build failed; retrying dependency resolution (attempt $attempt/3)."
+            sleep 15
+          done
       - name: Verify signed release APK
         run: |
           set -euo pipefail
           APK="$(find app/build/outputs/apk/release -name '*.apk' -type f | head -n 1)"
           test -n "$APK"
-          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --verbose "$APK"
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          "$BUILD_TOOLS/apksigner" verify --verbose "$APK"
+          # Prevent accidentally shipping a second app with a branch-specific ID.
+          EXPECTED_PACKAGE="org.schabi.newpipe.gold"
+          ACTUAL_PACKAGE="$("$BUILD_TOOLS/aapt" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)"
+          if [ "$ACTUAL_PACKAGE" != "$EXPECTED_PACKAGE" ]; then
+            echo "::error::Wrong APK package: $ACTUAL_PACKAGE (expected $EXPECTED_PACKAGE)"
+            exit 1
+          fi
+          # A debug APK must never be published as the Gold update.
+          if "$BUILD_TOOLS/aapt" dump badging "$APK" | grep -q '^application-debuggable'; then
+            echo "::error::Refusing to publish a debuggable APK as NewPipe Gold release."
+            exit 1
+          fi
+          echo "Verified non-debug Gold update package: $ACTUAL_PACKAGE"
+          # Display the actual Android versionCode to diagnose update downgrades.
+          "$BUILD_TOOLS/aapt" dump badging "$APK" | grep '^package:'
+          # apksigner versions format certificate labels differently. The verification
+          # exit code above is authoritative; certificate output is diagnostic only.
+          "$BUILD_TOOLS/apksigner" verify --print-certs "$APK"
           mkdir -p release-artifact
           cp "$APK" release-artifact/NewPipe-Gold-release.apk
       - uses: actions/upload-artifact@v4

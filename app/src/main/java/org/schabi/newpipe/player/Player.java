@@ -53,6 +53,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.audiofx.AudioEffect;
@@ -407,6 +410,7 @@ public final class Player implements PlaybackListener, Listener {
                         return;
                     }
                     playQueue.append(newQueue.getStreams());
+                    saveGoldQueueSnapshot();
                     return;
                 }
 
@@ -420,8 +424,13 @@ public final class Player implements PlaybackListener, Listener {
                     if (newQueue == null) {
                         return;
                     }
-                    final PlayQueueItem newItem = newQueue.getStreams().get(0);
-                    playQueue.enqueueNext(newItem, false);
+                    // enqueueNext inserts directly after the current item, so reverse
+                    // iteration preserves the user's selected order for batch enqueue.
+                    final java.util.List<PlayQueueItem> items = newQueue.getStreams();
+                    for (int i = items.size() - 1; i >= 0; i--) {
+                        playQueue.enqueueNext(items.get(i), false);
+                    }
+                    saveGoldQueueSnapshot();
                     return;
                 }
 
@@ -727,6 +736,7 @@ public final class Player implements PlaybackListener, Listener {
     }
 
     public void destroy() {
+        saveGoldQueueSnapshot();
         if (DEBUG) {
             Log.d(TAG, "destroy() called");
         }
@@ -1049,10 +1059,17 @@ public final class Player implements PlaybackListener, Listener {
     //////////////////////////////////////////////////////////////////////////*/
     //region Progress loop and updates
 
+    private long lastGoldQueueSnapshotTimeMs;
+
     private void onUpdateProgress(final int currentProgress,
                                   final int duration,
                                   final int bufferPercent) {
         if (isPrepared) {
+            final long now = SystemClock.elapsedRealtime();
+            if (now - lastGoldQueueSnapshotTimeMs >= 30_000L) {
+                lastGoldQueueSnapshotTimeMs = now;
+                saveGoldQueueSnapshot();
+            }
             UIs.call(ui -> ui.onUpdateProgress(currentProgress, duration, bufferPercent));
             notifyProgressUpdateToListeners(currentProgress, duration, bufferPercent);
             maybeGoldSkipIntroOutro(currentProgress, duration);
@@ -1315,6 +1332,7 @@ public final class Player implements PlaybackListener, Listener {
         }
 
         // Save before leaving playback, rather than relying only on app shutdown.
+        saveGoldQueueSnapshot();
         saveStreamProgressState();
         UIs.call(PlayerUi::onPaused);
     }
@@ -1342,6 +1360,7 @@ public final class Player implements PlaybackListener, Listener {
         if (playQueue.getIndex() < playQueue.size() - 1) {
             playQueue.offsetIndex(+1);
         }
+        saveGoldQueueSnapshot();
         if (isProgressLoopRunning()) {
             stopProgressLoop();
         }
@@ -1631,6 +1650,87 @@ public final class Player implements PlaybackListener, Listener {
     public void onPrepare() {
         if (!exoPlayerIsNull()) {
             simpleExoPlayer.prepare();
+        } else if (playQueue == null) {
+            restoreGoldQueueSnapshot();
+        }
+    }
+
+    /** Restore a previously saved queue when the media session is prepared without a player. */
+    private void restoreGoldQueueSnapshot() {
+        final String raw = context.getSharedPreferences("gold_playback_queue",
+                Context.MODE_PRIVATE).getString("snapshot", null);
+        if (raw == null) {
+            return;
+        }
+        try {
+            final JSONObject snapshot = new JSONObject(raw);
+            if (snapshot.optInt("version", -1) != 1) {
+                return;
+            }
+            final JSONArray entries = snapshot.optJSONArray("items");
+            if (entries == null || entries.length() == 0) {
+                return;
+            }
+            final java.util.List<JSONObject> validEntries = new java.util.ArrayList<>();
+            for (int i = 0; i < entries.length(); i++) {
+                final JSONObject entry = entries.optJSONObject(i);
+                if (entry != null && entry.optInt("serviceId", -1) >= 0
+                        && !entry.optString("url", "").isEmpty()) {
+                    validEntries.add(entry);
+                }
+            }
+            if (validEntries.isEmpty()) {
+                return;
+            }
+            final int requestedIndex = Math.max(0, snapshot.optInt("index", 0));
+            final long positionMs = Math.max(0L, snapshot.optLong("positionMs", 0L));
+            // Keep the original indices even if one URL cannot be resolved. Otherwise
+            // skipping a broken entry would restore playback at the wrong video.
+            streamItemDisposable.add(Observable.range(0, validEntries.size())
+                    .concatMap(i -> {
+                        final JSONObject entry = validEntries.get(i);
+                        return ExtractorHelper.getStreamInfo(entry.optInt("serviceId"),
+                                        entry.optString("url"), false)
+                                .toObservable()
+                                .map(info -> new android.util.Pair<Integer,
+                                        org.schabi.newpipe.extractor.stream.StreamInfo>(i, info))
+                                .onErrorResumeNext(error -> Observable.empty());
+                    })
+                    .toList()
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(resolved -> {
+                        if (resolved.isEmpty() || playQueue != null) {
+                            return;
+                        }
+                        int index = 0;
+                        int closestDistance = Integer.MAX_VALUE;
+                        boolean exactItemRestored = false;
+                        final java.util.List<PlayQueueItem> items = new java.util.ArrayList<>();
+                        for (final android.util.Pair<Integer,
+                                org.schabi.newpipe.extractor.stream.StreamInfo> item : resolved) {
+                            final int distance = Math.abs(item.first - requestedIndex);
+                            if (distance < closestDistance) {
+                                index = items.size();
+                                closestDistance = distance;
+                                exactItemRestored = distance == 0;
+                            }
+                            items.add(new PlayQueueItem(item.second));
+                        }
+                        final PlayQueue restored = new SinglePlayQueue(items.get(0));
+                        if (items.size() > 1) {
+                            restored.append(items.subList(1, items.size()));
+                        }
+                        restored.setIndex(index);
+                        // A fallback video must not inherit another video's timestamp.
+                        if (exactItemRestored) {
+                            restored.setRecovery(index, positionMs);
+                        }
+                        // Restore paused; never start audio unexpectedly after process restart.
+                        initUIsForCurrentPlayerType();
+                        initPlayback(restored, false);
+                    }, error -> Log.w(TAG, "Could not restore Gold queue", error)));
+        } catch (final JSONException exception) {
+            Log.w(TAG, "Invalid Gold playback snapshot", exception);
         }
     }
     //endregion
@@ -2155,6 +2255,7 @@ public final class Player implements PlaybackListener, Listener {
                 playQueue.getStreams());
         if (autoQueue != null) {
             playQueue.append(autoQueue.getStreams());
+            saveGoldQueueSnapshot();
         }
     }
 
@@ -2174,10 +2275,12 @@ public final class Player implements PlaybackListener, Listener {
             saveStreamProgressState();
         }
         playQueue.setIndex(index);
+        saveGoldQueueSnapshot();
     }
 
     @Override
     public void onPlayQueueEdited() {
+        saveGoldQueueSnapshot();
         notifyPlaybackUpdateToListeners();
         UIs.call(PlayerUi::onPlayQueueEdited);
     }
@@ -2318,7 +2421,45 @@ public final class Player implements PlaybackListener, Listener {
         }
     }
 
+    /**
+     * Persist a versioned, lightweight queue snapshot independently of the player service.
+     * apply() schedules disk I/O asynchronously. The snapshot is not deleted when the
+     * player service stops; a separate restore flow can read it after process death.
+     */
+    private void saveGoldQueueSnapshot() {
+        if (playQueue == null || playQueue.size() == 0) {
+            return;
+        }
+        try {
+            final JSONArray entries = new JSONArray();
+            for (final PlayQueueItem item : playQueue.getStreams()) {
+                final JSONObject entry = new JSONObject();
+                entry.put("serviceId", item.getServiceId());
+                entry.put("url", item.getUrl());
+                entry.put("title", item.getTitle());
+                entries.put(entry);
+            }
+            final JSONObject snapshot = new JSONObject();
+            snapshot.put("version", 1);
+            snapshot.put("index", playQueue.getIndex());
+            final long recoveryPosition = playQueue.getItem() == null ? 0L
+                    : playQueue.getItem().getRecoveryPosition();
+            final long playerPosition = exoPlayerIsNull() ? 0L
+                    : Math.max(0L, simpleExoPlayer.getCurrentPosition());
+            // During initialization the new ExoPlayer can still report zero before it
+            // applies the restored seek. Keep the saved recovery position in that case.
+            snapshot.put("positionMs", playerPosition == 0L
+                    ? Math.max(0L, recoveryPosition) : playerPosition);
+            snapshot.put("items", entries);
+            context.getSharedPreferences("gold_playback_queue", Context.MODE_PRIVATE)
+                    .edit().putString("snapshot", snapshot.toString()).apply();
+        } catch (final JSONException exception) {
+            Log.w(TAG, "Could not save Gold playback queue", exception);
+        }
+    }
+
     private void notifyQueueUpdateToListeners() {
+        saveGoldQueueSnapshot();
         if (fragmentListener != null && playQueue != null) {
             fragmentListener.onQueueUpdate(playQueue);
         }
